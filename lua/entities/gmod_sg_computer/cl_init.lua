@@ -8,6 +8,13 @@ surface.CreateFont("SGC_SG1", {
 	antialias = true,
 	additive = false,
 })
+surface.CreateFont("SGC_Symb", {
+	font = "Stargate Address Glyphs Concept",
+	size = 90,
+	weight = 400,
+	antialias = true,
+	additive = false,
+})
 surface.CreateFont("Marlett_15", {
 	font="Marlett",
 	size=15,
@@ -51,7 +58,7 @@ end
 
 
 function ENT:Initialize()
-	self:ScreenInit(512,384,Vector(11.8,-512/2*0.04,384/2*0.04+15.9),Angle(0,90,85),0.04)
+	self:ScreenInit(512,384,Vector(11.75,-512/2*0.04,384/2*0.04+3.9),Angle(0,90,85.5),0.04)
   --Colors:Movie
 	self.MainColor = Color(42,125,225)
 	self.ChevBoxesColor = self.MainColor
@@ -93,6 +100,9 @@ function ENT:Initialize()
   end
 
 	self.DialingAddress = ""
+	self.OldDialingAddress = ""
+
+	self.Matrix = Matrix()
 end
 
 local MainFrame = surface.GetTextureID("glebqip/dial screen 1/MainFrame")
@@ -108,7 +118,6 @@ local ChevronBox = surface.GetTextureID("glebqip/dial screen 1/ChevronBox")
 local Gradient = surface.GetTextureID("gui/gradient_down")
 local Red = Color(239,0,0)
 function ENT:Draw()
-	self:ScreenChange(Vector(11.8,-512/2*0.04,384/2*0.04+3.9),Angle(0,90,85.5),0.04)
 	self:DrawModel()
 	self:DrawScreen(0,-10,512,410,0.96)
 	return true
@@ -207,7 +216,6 @@ function ENT:Screen()
   for i=0,6 do
 			draw.OutlinedBox(440, 37+i*43, 64, 40, 2)
   end
-  local Sm2 = SymbolAnim2 and (CurTime()-SymbolAnim2) < 0.6
 	--local DialingAddress = "123456#"
   for i=0,#self.DialingAddress do
 			draw.SimpleText(self.DialingAddress[i+1], "SGC_SG1", 472,58+i*43, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -229,22 +237,49 @@ function ENT:Screen()
 
 	surface.SetDrawColor(color_white)
   --local OpenChev = CurTime()%2
-  if Sm2 then
-      local anim = math.min(1,(CurTime()-SymbolAnim2)*1.66)
-      local x,y = 256+anim*216,229-anim*150+anim*43*SG.Chevron
-      local ianim = 1-anim*0.8
-      surface.drawRectOL(-325/2*ianim+x,-257/2*ianim+y,325*ianim,257*ianim,Color(255,255,255,math.max(0,ianim)*255),1)
-      surface.pushRotatedMatrix(x,y,0,3-(anim*3)/90*78)
-          --surface.drawText(0,0,SG.RingSymbol,1,1,Color(255,255,255,255),font("Stargate Address Glyphs Concept",90))
-      surface.popMatrix()
-  elseif SymbolAnim then
-      local anim = math.min(1,(CurTime()-SymbolAnim)*1.5)
-      local x,y = 256,123+anim*106
-      surface.drawRectOL(-325/2*anim+x,-257/2*anim+y,325*anim,257*anim,Color(255,255,255,anim*255),1)
-      surface.pushRotatedMatrix(x,y,0,anim*3)
-          surface.drawText(0,0,SG.DialingSymbol,1,1,White,font("Stargate Address Glyphs Concept",90))
-      surface.popMatrix()
-  end
+	if self.SymbolAnim or self.SymbolAnim2 then
+		local x,y,scale = 0,0,0
+		local symbol = ""
+		local alpha = 0
+	  local Sm2 = self.SymbolAnim2 and (CurTime()-self.SymbolAnim2) < 0.6
+	  if Sm2 then
+	      local anim = math.min(1,(CurTime()-self.SymbolAnim2)*1.66)
+	      x,y = 256+anim*216+1,165-anim*150+anim*43*(#self.DialingAddress+1)
+				scale = 3-(anim*3)/90*78
+				symbol = self:GetNW2String("RingSymbol","")
+	      local xanim = 1-anim*0.801
+	      local yanim = 1-anim*0.842
+				alpha = math.max(0,xanim)
+				xb,yb,wb,hb = -326/2*xanim+x,-256/2*yanim+y,326*xanim,257*yanim
+	      --surface.drawRectOL(,Color(255,255,255,math.max(0,ianim)*255),1)
+	      --surface.pushRotatedMatrix(x,y,0,3-(anim*3)/90*78)
+	          --surface.drawText(0,0,SG.RingSymbol,1,1,Color(255,255,255,255),font("Stargate Address Glyphs Concept",90))
+	      --surface.popMatrix()
+	  elseif self.SymbolAnim then
+	      local anim = math.min(1,(CurTime()-self.SymbolAnim)*1.5)
+	      x,y = 256,59+anim*106
+				scale = anim*3
+				symbol = self:GetNW2String("DialingSymbol","")
+				alpha = anim
+				xb,yb,wb,hb = -325/2*anim+x+2,-257/2*anim+y+1,325*anim,257*anim
+	      --surface.drawRectOL(-325/2*anim+x,-257/2*anim+y,325*anim,257*anim,Color(255,255,255,anim*255),1)
+	      --surface.pushRotatedMatrix(x,y,0,anim*3)
+	        --  surface.drawText(0,0,self:GetNW2String("DialingSymbol",""),1,1,color_white,font("Stargate Address Glyphs Concept",90))
+	      --surface.popMatrix()
+	  end
+	  self.Matrix = Matrix()
+	  self.Matrix:Translate(Vector(x,y,0))
+	  	self.Matrix:Scale(Vector(scale,scale,scale))
+	  self.Matrix:Translate(-Vector(0,0,0))
+		--surface.SetAlphaMultiplier(alpha)
+			surface.SetDrawColor(Color(255,255,255,alpha*255))
+			draw.OutlinedBox(xb,yb,wb,hb,2)
+		--surface.SetAlphaMultiplier(1)
+	  cam.PushModelMatrix(self.Matrix)
+
+			draw.SimpleText(symbol, "SGC_Symb", 0,0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		cam.PopModelMatrix()
+	end
 
 	surface.SetDrawColor(self.MainColor)
 	surface.SetAlphaMultiplier(Alpha)
@@ -273,24 +308,28 @@ function ENT:Screen()
 end
 
 function ENT:Think()
-	if self.Open ~= self:GetNW2Bool("Open",false) then
+	local active = self:GetNW2Bool("Active",false)
+	local open = self:GetNW2Bool("Open",false)
+	local inbound = self:GetNW2Bool("Inbound",false)
+	local connected = self:GetNW2Bool("Connected",false)
+	if self.Open ~= open then
 	    self.OpenCTimer = CurTime()
-	    self.Open = self:GetNW2Bool("Open",false)
+	    self.Open = open
 	end
-	if CurTime()-self.Boxes1Timer > 0.5 and self:GetNW2Bool("Connected",false) then
+	if CurTime()-self.Boxes1Timer > 0.5 and connected then
 	    for i=1,24 do
 	        self.Boxes1[i] = math.random()>0.6
 	    end
 	    self.Boxes1Timer = CurTime()
 	end
-	if CurTime()-self.Boxes2Timer > 0.25 and self:GetNW2Bool("Connected",false) then
+	if CurTime()-self.Boxes2Timer > 0.25 and connected then
 	    for i=1,36 do
 	        self.Boxes2[i] = math.random()>0.4
 	    end
 	    self.Boxes2Timer = CurTime()
 	end
 	if CurTime()-self.DigitsTimer > 0.15 then
-	    if self:GetNW2Bool("Connected",false) and self:GetNW2Bool("Active",false) and math.random()>0.2 then
+	    if connected and active and math.random()>0.2 then
 	        local str = ""
 	        local typ = math.random()>0.3
 	        for i=math.random(2,4),math.random(6,11) do
@@ -309,34 +348,40 @@ function ENT:Think()
 	end
 
 	for i=1,9 do
-	    if CurTime() - self.GradientsTimers[i] > self.GradientSpeeds[i] and self:GetNW2Bool("Active",false) and (self:GetNW2Bool("Inbound",false) or self:GetNW2Bool("RingRotation",false)) then
+	    if CurTime() - self.GradientsTimers[i] > self.GradientSpeeds[i] and active and (inbound or self:GetNW2Bool("RingRotation",false)) then
 	        self.GradientSpeeds[i] = math.Rand(0.4,0.8)
 	        self.GradientsTimers[i] = CurTime()
 	    end
 	end
-	--[[
-	local LastChev = SG.Chevron > 7 or SG.DialingSymbol == "#" or SG.DialedSymbol == "#"
-	local LastSecond = not self:GetNW2Bool("Open",false) and LastChev and SG.ChevronLocked
-	if self:GetNW2Bool("Active",false) and (SG.DialingSymbol == SG.DialedSymbol and not LastChev or LastSecond) and self.SymbolAnim and not self.SymbolAnim2 then
+
+	local dialadd = self:GetNW2String("DialingAddress","")
+	local dialsymb = self:GetNW2String("DialingSymbol","")
+	local dialdsymb = self:GetNW2String("DialedSymbol","")
+	local ringsymb = self:GetNW2String("RingSymbol","")
+	local ringrot = self:GetNW2Bool("RingRotation",false)
+
+	local LastChev = self:GetNW2Int("Chevron",0) > 7 or dialsymb == "#" or dialdsymb == "#"
+	local LastSecond = not open and LastChev and self:GetNW2Bool("ChevronLocked",false)
+	if active and (dialsymb == dialdsymb and not LastChev or LastSecond) and self.SymbolAnim and not self.SymbolAnim2 then
 	    self.SymbolAnim2 = CurTime()
 	    self.SymbolAnim = nil
-	elseif self:GetNW2Bool("Active",false) and not self:GetNW2Bool("Open",false) and SG.DialingSymbol ~= "" and SG.DialingSymbol == SG.RingSymbol and (SG.RingRotation==0 or LastChev) and not self.SymbolAnim and not self.SymbolAnim2 then
+	elseif active and not open and dialsymb ~= "" and dialsymb == ringsymb and (not ringrot or LastChev) and not self.SymbolAnim and not self.SymbolAnim2 then
 	    self.SymbolAnim = CurTime()
-	elseif (not self:GetNW2Bool("Active",false) or self:GetNW2Bool("Open",false) or self:GetNW2Bool("Inbound",false) or SG.RingRotation~=0 and (not LastChev or SG.DialingSymbol ~= SG.RingSymbol)) and (self.SymbolAnim or self.SymbolAnim2) then
+	elseif (not active or open or inbound or ringrot and (not LastChev or dialsymb ~= ringsymb)) and (self.SymbolAnim or self.SymbolAnim2) then
 	    self.SymbolAnim2 = nil
 	    self.SymbolAnim = nil
 	end
 	if not self.SymbolAnim and not self.SymbolAnim2 or self.SymbolAnim2 and (CurTime()-self.SymbolAnim2) > 0.6 then
-	    if LastSecond and SG.DialingAddress[#SG.DialingAddress] ~= "#" and SG.Chevron < 9 then
-	        self.DialingAddress = SG.DialingAddress..SG.DialedSymbol
+	    if LastSecond and dialadd[#dialadd] ~= "#" and SG.Chevron < 9 then
+	        self.DialingAddress = dialadd..dialdsymb
 	        if not self.EndTimer then
 	            self.EndTimer = CurTime()
 	        end
 	    else
-	        if not self:GetNW2Bool("Open",false) and SG.ChevronLocked and not self.EndTimer then
+	        if not open and self:GetNW2Bool("ChevronLocked",false) and not self.EndTimer then
 	            self.EndTimer = CurTime()
 	        end
-	        self.DialingAddress = SG.DialingAddress
+	        self.DialingAddress = dialadd
 	    end
 	end
 	if self.OldDialingAddress ~= self.DialingAddress then
@@ -346,6 +391,7 @@ function ENT:Think()
 	    end
 	    self.OldDialingAddress = self.DialingAddress
 	end
+	--[[
 	local endT = self.EndTimer and (CurTime()-EndTimer)%0.4 == 0
 	if self.OldLocked ~= endT and endT then
 	    SLock:stop()

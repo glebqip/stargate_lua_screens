@@ -10,15 +10,15 @@ local matScreen = CreateMaterial("SGCRT","UnlitGeneric",{
 function ENT:ScreenInit(x,y,pos,ang,scale)
   self.XRes = x
   self.YRes = y
-  self.SPos = self:LocalToWorld(pos)
-  self.SAng = self:LocalToWorldAngles(ang)
+  self.SPos = pos
+  self.SAng = ang
   self.SScale = scale
   self.RT = GetRenderTarget("SGC_COMPUTER", self.XRes, self.YRes)
 	matScreen:SetTexture("$basetexture", self.RT)
 end
 function ENT:ScreenChange(pos,ang,scale)
   self.SPos = self:LocalToWorld(pos)
-  self.SAng = self:LocalToWorldAngles(ang)
+  self.SAng = ang
   self.SScale = scale
 end
 
@@ -39,7 +39,7 @@ function ENT:DrawScreen(x,y,w,h,s)
   render.SetViewPort(0, 0, oldw, oldh)
 	render.SetRenderTarget(OldRT)
 
-	cam.Start3D2D(self.SPos, self.SAng, self.SScale)
+	cam.Start3D2D(self:LocalToWorld(self.SPos), self:LocalToWorldAngles(self.SAng), self.SScale)
 		surface.SetDrawColor(0,0,0,255)
 		surface.DrawRect(x,y,w,h)
 		surface.SetDrawColor(255,255,255,255)
