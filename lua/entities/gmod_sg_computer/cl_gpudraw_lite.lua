@@ -1,0 +1,50 @@
+--Lite lib from Wiremod GPU
+
+local matScreen = CreateMaterial("SGCRT","UnlitGeneric",{
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+	["$ignorez"] = 1,
+	["$nolod"] = 1,
+})
+
+function ENT:ScreenInit(x,y,pos,ang,scale)
+  self.XRes = x
+  self.YRes = y
+  self.SPos = self:LocalToWorld(pos)
+  self.SAng = self:LocalToWorldAngles(ang)
+  self.SScale = scale
+  self.RT = GetRenderTarget("SGC_COMPUTER", self.XRes, self.YRes)
+	matScreen:SetTexture("$basetexture", self.RT)
+end
+function ENT:ScreenChange(pos,ang,scale)
+  self.SPos = self:LocalToWorld(pos)
+  self.SAng = self:LocalToWorldAngles(ang)
+  self.SScale = scale
+end
+
+function ENT:DrawScreen(x,y,w,h,s)
+  if not self.Screen then return end
+	local oldw,oldh = ScrW(),ScrH()
+	local OldRT = render.GetRenderTarget()
+
+	render.SetRenderTarget(self.RT)
+  render.SetViewPort(0, 0, self.XRes, self.YRes)
+  cam.Start2D()
+    local succ,err = pcall(self.Screen,self)
+    if not succ then
+      surface.SetAlphaMultiplier(1)
+      ErrorNoHalt(err.."\n")
+    end
+    cam.End2D()
+  render.SetViewPort(0, 0, oldw, oldh)
+	render.SetRenderTarget(OldRT)
+
+	cam.Start3D2D(self.SPos, self.SAng, self.SScale)
+		surface.SetDrawColor(0,0,0,255)
+		surface.DrawRect(x,y,w,h)
+		surface.SetDrawColor(255,255,255,255)
+		surface.SetMaterial(matScreen)
+		surface.DrawTexturedRectRotated(self.XRes/2,self.YRes/2,self.XRes*s,self.YRes*s,0)
+	cam.End3D2D()
+	--WireGPU_matScreen:SetTexture("$basetexture", OldTex)
+end

@@ -1,0 +1,9 @@
+"AddonInfo"
+{
+	"name"        "Temp"
+	"version"     "0"
+	"author_name" "..."
+	"author_url"  "..."
+	"info"        "..."
+	"override"    "0"
+}
