@@ -30,6 +30,8 @@ function ENT:DrawScreen(x,y,w,h,s)
 	render.SetRenderTarget(self.RT)
   render.SetViewPort(0, 0, self.XRes, self.YRes)
   cam.Start2D()
+		surface.SetDrawColor(0,0,0,255)
+		surface.DrawRect(x,y,w,h)
     local succ,err = pcall(self.Screen,self)
     if not succ then
       surface.SetAlphaMultiplier(1)
