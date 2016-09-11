@@ -22,6 +22,8 @@ if (SGLanguage ~=nil and SGLanguage.GetMessage ~=nil) then
 end
 
 function ENT:Initialize()
+  self:LoadScreens()
+
   self:ScreenInit(512, 384, Vector(11.75, -512/2*0.04, 384/2*0.04+3.9), Angle(0, 90, 85.5), 0.04)
   --Colors:Movie
   self.MainColor = Color(42, 125, 225)
@@ -36,10 +38,6 @@ function ENT:Initialize()
   self.ChevBoxesColor = self.MainColor
   self.SecondColor = Color(200, 200, 182)
   --self.SecondColor = Color(208, 208, 144)
-  self.Screens = {}
-  for ID, v in pairs(self.GetScreenFunctions) do
-    self.Screens[ID] = v(self)
-  end
 
   self.NoSignalXDir = 1
   self.NoSignalYDir = 1
@@ -62,7 +60,7 @@ function draw.OutlinedBox(x, y, w, h, thickness)
 end
 
 function ENT:Screen()
-  if not self:GetNW2Bool("ServerConnected",false) then
+  if false and not self:GetNW2Bool("ServerConnected",false) then
     for i=0,7 do
       local r = i%4 < 2 and 255 or 0
       local g = i%8 < 4 and 255 or 0
@@ -118,9 +116,7 @@ function ENT:Think()
 
   --Reload screen scripts on change
   if self.RequestScreenReload then
-    for k,v in pairs(self.Screens) do
-      self:ReloadScreen(k)
-    end
     self.RequestScreenReload = false
+    self:LoadScreens()
   end
 end

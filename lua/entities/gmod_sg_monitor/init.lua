@@ -3,12 +3,8 @@ resource.AddWorkshop("761096308")
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 AddCSLuaFile("cl_gpudraw_lite.lua")
-ENT.Screens = {}
+for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do AddCSLuaFile("entities/gmod_sg_monitor/screens/"..filename) end
 ENT.ClientVer = 1
-for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
-  AddCSLuaFile("entities/gmod_sg_monitor/screens/"..filename)
-  include("entities/gmod_sg_monitor/screens/"..filename)
-end
 
 include("shared.lua")
 if (StarGate==nil or StarGate.CheckModule==nil or not StarGate.CheckModule("extra")) then return end
@@ -19,10 +15,8 @@ function ENT:Initialize()
   self:SetMoveType(MOVETYPE_VPHYSICS)
   self:SetSolid(SOLID_VPHYSICS)
 
-  self.Screens = {}
-  for ID, v in pairs(self.GetScreenFunctions) do
-    self.Screens[ID] = v(self)
-  end
+  self.Screen = 0
+  self:LoadScreens()
 end
 
 function ENT:SpawnFunction(ply, tr)
@@ -45,17 +39,17 @@ function ENT:SpawnFunction(ply, tr)
 end
 
 function ENT:Think()
+  if not self.Server.On then self.Screen = 0 end
   if self.RequestScreenReload then
-    for k,v in pairs(self.Screens) do
-      self:ReloadScreen(k)
-    end
+    self.RequestScreenReload = false
+    self:LoadScreens()
     self.RequestScreenReload = false
   end
   local srv = self.Server
   self:SetNW2Bool("ServerConnected",IsValid(srv))
   if (IsValid(srv)) then
     self:SetNW2Entity("Server",srv)
-    self:SetNW2Int("CurrScreen",1)
+    self:SetNW2Int("CurrScreen",self.Screen)
     --[[
     self:SetNW2Int("RingAngle", gate:GetRingAng())
     self:SetNW2Bool("Active", gate.NewActive)

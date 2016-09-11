@@ -6,6 +6,11 @@
 
 local SCR = {}
 if SERVER then
+  function SCR:Initialize()
+  end
+
+  function SCR:Think()
+  end
 else
   function SCR:Initialize()
     self.Boxes = {}
@@ -51,7 +56,7 @@ else
   end
 
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
-    local open = self:GetNW2Bool("Open",false)
+    local open = self:GetServerBool("Open",false)
     local py = (CurTime()-self.Digits1Timer)%0.5*2-1
     if CurTime()-self.Digits2Timer < 4 then
       local anim = (CurTime()-self.Digits2Timer)%4
@@ -93,7 +98,7 @@ else
     surface.SetTexture(RingArcs)
     surface.DrawTexturedRectRotated(381,105,196,196,0)
     surface.SetTexture(Ring)
-    surface.DrawTexturedRectRotated(381,105,197,197,self:GetNW2Int("RingAngle",0)-4.615)
+    surface.DrawTexturedRectRotated(381,105,197,197,self:GetServerInt("RingAngle",0)-4.615)
 
     surface.SetTexture(OpenRed)
     if open then
@@ -130,13 +135,13 @@ else
     end
 
     local ChevronState = math.Clamp((CurTime()-self.IOpenCTimer)*4,0,1)
-    if not self:GetNW2Bool("Open") then ChevronState = 1-ChevronState end
+    if not self:GetServerBool("Open") then ChevronState = 1-ChevronState end
     for i=1,9 do
       local ang = 180-(360/9)*i
       local rad = math.rad(ang)
       local X,Y = math.sin(rad)*(86-ChevronState*4.5), math.cos(rad)*(86-ChevronState*4.5)
       local X2,Y2 = math.sin(rad)*(93+ChevronState*4.5), math.cos(rad)*(93+ChevronState*4.5)
-      local active = self:GetNW2String("Chevrons")[i == 9 and 7 or i>5 and i-2 or i > 3 and i+4 or i] == "1"
+      local active = self:GetServerString("Chevrons")[i == 9 and 7 or i>5 and i-2 or i > 3 and i+4 or i] == "1"
       surface.SetDrawColor(active and Red or SecondColor)
       if i < 9 then
         surface.SetTexture(Chevron)
@@ -150,7 +155,7 @@ else
       surface.DrawTexturedRectRotated(381+X2,105+Y2,12,12,ang+180)
     end
 
-    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 19, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
 
     draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
 
@@ -166,9 +171,9 @@ else
 
   function SCR:Think(curr)
     if not curr then return end
-    local connected = self:GetNW2Bool("Connected",false)
-    local active = self:GetNW2Bool("Active",false)
-    local open = self:GetNW2Bool("Open",false)
+    local connected = self:GetServerBool("Connected",false)
+    local active = self:GetServerBool("Active",false)
+    local open = self:GetServerBool("Open",false)
 
     if self.Open ~= open then
       self.IOpenCTimer = CurTime()

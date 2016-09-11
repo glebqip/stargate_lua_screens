@@ -13,12 +13,52 @@ ENT.AdminSpawnable = false
 
 ENT.RequestScreenReload = true
 
-function ENT:ReloadScreen(ID)
-  local tbl = self.GetScreenFunctions[ID](self,true)
-  for k,v in pairs(self.Screens[ID]) do
-    self.Screens[ID][k] = tbl[k] or v
+function ENT:RegisterScreenFunctions(screen)
+  screen.Entity = self
+  if SERVER then
+    screen.Server = self.Server
+    screen.SetMonitorBool = function(_, id, val) return screen.Entity:SetNW2Bool(id, val) end
+    screen.SetMonitorInt = function(_, id, val) return screen.Entity:SetNW2Int(id, val) end
+    screen.SetMonitorString = function(_, id, val) return screen.Entity:SetNW2String(id, val) end
+  else
+    screen.GetMonitorBool = function(_, id, default) return screen.Entity:GetNW2Bool(id, default) end
+    screen.GetMonitorInt = function(_, id, default) return screen.Entity:GetNW2Int(id, default) end
+    screen.GetMonitorString = function(_, id, default) return screen.Entity:GetNW2String(id, default) end
+    screen.GetServerBool = function(_,id, default)
+      if not IsValid(screen.Entity.Server) then return default end
+      return screen.Entity.Server:GetNW2Bool(id, default)
+    end
+    screen.GetServerInt = function(_,id, default)
+      if not IsValid(screen.Entity.Server) then return default end
+      return screen.Entity.Server:GetNW2Int(id, default)
+    end
+    screen.GetServerString = function(_,id, default)
+      if not IsValid(screen.Entity.Server) then return default end
+      return screen.Entity.Server:GetNW2String(id, default)
+    end
+    screen.EmitSound = function(_,...) return screen.Entity:EmitSound(...) end
   end
 end
+
+function ENT:LoadScreens()
+  self.Screens = self.Screens or {}
+  for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
+    local init = false
+    local ID,SCR = include("entities/gmod_sg_monitor/screens/"..filename)
+    if not self.Screens[ID] then
+      self.Screens[ID] = {}
+      init = true
+    end
+    for k,v in pairs(SCR) do
+      self.Screens[ID][k] = v
+    end
+    if init then
+      self:RegisterScreenFunctions(self.Screens[ID])
+      self.Screens[ID]:Initialize()
+    end
+  end
+end
+--[[
 --Screens loading func
 ENT.GetScreenFunctions = {}
 for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
@@ -56,3 +96,4 @@ end
 function ENT:Think()
   print(2)
 end
+]]
