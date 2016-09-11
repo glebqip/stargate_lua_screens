@@ -1,33 +1,5 @@
 include("shared.lua")
 include("cl_gpudraw_lite.lua")
-local Screens = {}
-for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
-  local ID,SCR = include("entities/gmod_sg_monitor/screens/"..filename)
-  Screens[ID] = function(ent)
-    local tbl = {}
-    for k,v in pairs(SCR) do
-      tbl[k] = v
-    end
-    tbl.Entity = ent
-    tbl.GetMonitorBool = function(_, id, default) return ent:GetNW2Bool(id, default) end
-    tbl.GetMonitorInt = function(_, id, default) return ent:GetNW2Int(id, default) end
-    tbl.GetMonitorString = function(_, id, default) return ent:GetNW2String(id, default) end
-    tbl.GetServerBool = function(_,id, default)
-      if not IsValid(ent.Server) then return default end
-      return ent.Server:GetNW2Bool(id, default)
-    end
-    tbl.GetServerInt = function(_,id, default)
-      if not IsValid(ent.Server) then return default end
-      return ent.Server:GetNW2Int(id, default)
-    end
-    tbl.GetServerString = function(_,id, default)
-      if not IsValid(ent.Server) then return default end
-      return ent.Server:GetNW2String(id, default)
-    end
-    tbl.EmitSound = function(_,...) return ent:EmitSound(...) end
-    return tbl
-  end
-end
 
 surface.CreateFont("SGC_SG1", {font="Stargate Address Glyphs Concept", size=35, weight=400, antialias=true, additive=false})
 surface.CreateFont("SGC_Symb", {font="Stargate Address Glyphs Concept", size=90, weight=400, antialias=true, additive=false, })
@@ -65,9 +37,8 @@ function ENT:Initialize()
   self.SecondColor = Color(200, 200, 182)
   --self.SecondColor = Color(208, 208, 144)
   self.Screens = {}
-  for k, v in pairs(Screens) do
-    self.Screens[k] = v(self)
-    self.Screens[k]:Initialize(self)
+  for ID, v in pairs(self.GetScreenFunctions) do
+    self.Screens[ID] = v(self)
   end
 
   self.NoSignalXDir = 1
@@ -143,5 +114,13 @@ function ENT:Think()
   end
   for k, v in pairs(self.Screens) do
     --v:Think(k==self:GetNW2Int("CurrScreen",0))
+  end
+
+  --Reload screen scripts on change
+  if self.RequestScreenReload then
+    for k,v in pairs(self.Screens) do
+      self:ReloadScreen(k)
+    end
+    self.RequestScreenReload = false
   end
 end

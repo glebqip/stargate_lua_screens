@@ -18,13 +18,10 @@ function ENT:Initialize()
   self:PhysicsInit(SOLID_VPHYSICS)
   self:SetMoveType(MOVETYPE_VPHYSICS)
   self:SetSolid(SOLID_VPHYSICS)
-  for _, v in pairs(self.Screens) do
-    v.Entity = self -- Set entity to computers
-    v.SetNW2Bool = function(_,...) return self:SetNW2Bool(...) end
-    v.SetNW2Int = function(_,...) return self:SetNW2Int(...) end
-    v.SetNW2String = function(_,...) return self:SetNW2String(...) end
-    v.EmitSound = function(_,...) return self:EmitSound(...) end
-    v:Initialize()
+
+  self.Screens = {}
+  for ID, v in pairs(self.GetScreenFunctions) do
+    self.Screens[ID] = v(self)
   end
 end
 
@@ -48,6 +45,12 @@ function ENT:SpawnFunction(ply, tr)
 end
 
 function ENT:Think()
+  if self.RequestScreenReload then
+    for k,v in pairs(self.Screens) do
+      self:ReloadScreen(k)
+    end
+    self.RequestScreenReload = false
+  end
   local srv = self.Server
   self:SetNW2Bool("ServerConnected",IsValid(srv))
   if (IsValid(srv)) then

@@ -457,7 +457,7 @@ else
     if (self:GetServerBool("Local",false) or #self.DialingAddress < 7 or inbound) and self.Timer8 then
       self.Timer8 = false
     end
-    print(self.Entity)  
   end
 end
-return 1,SCR
+
+return 1, SCR

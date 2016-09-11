@@ -4,7 +4,6 @@
 -- ID: 2 --
 ---------------------
 
-
 local SCR = {}
 if SERVER then
 else
@@ -65,8 +64,8 @@ else
       end
       for i=0,3 do
         if self.Digits2[i+1] then
-          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-          --scr.drawText(259,402+i*10,self.Digits2[i+1],0,1,SecondColor,font("Marlett",10)) --FIXME
+          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+          --SCR.drawText(259,402+i*10,self.Digits2[i+1],0,1,SecondColor,font("Marlett",10)) --FIXME
         end
       end
       if w > 0 then
@@ -78,8 +77,8 @@ else
     if #self.Digits1 > 0 then
       for i=0,#self.Digits1-1 do
         if self.Digits1[i+1] then
-          --scr.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
-          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+          --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
+          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
         end
       end
     end
@@ -151,18 +150,18 @@ else
       surface.DrawTexturedRectRotated(381+X2,105+Y2,12,12,ang+180)
     end
 
-    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 19, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 19, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
 
-    draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
 
     if open then
-      draw.SimpleText("ACTIVE", "Marlett_15", 330, 210, Color(20,160,20), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText("ACTIVE", "Marlett_15", 330, 210, Color(20,160,20), TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
     else
       local Alpha = math.abs(math.sin(CurTime()*math.pi/2))
       surface.SetAlphaMultiplier(Alpha)
-      draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
     end
-    if open then draw.SimpleText("PROCESSING", "Marlett_15", 8, 366, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
+    if open then draw.SimpleText("PROCESSING", "Marlett_15", 8, 366, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER) end
   end
 
   function SCR:Think(curr)
