@@ -3,12 +3,52 @@
 -- Author: glebqip --
 -- ID: 1 --
 ---------------------
-local SCR = {}
+local SCR = {
+  Name = "Dialing computer",
+}
 if SERVER then
   function SCR:Initialize()
+    self.EnteredAddress = ""
   end
 
   function SCR:Think()
+    self:SetMonitorString("EnteredAddress",self.EnteredAddress)
+    if #self.EnteredAddress > 0 and self:GetServerBool("Active",false) then
+      self.EnteredAddress = ""
+    end
+  end
+  function SCR:Trigger(curr,key, value)
+    if not curr or self:GetMonitorInt("SDState",0) ~= 0 then return end
+    if self.Entity.Server.DCError ~= 0 and CurTime()-self.Entity.Server.DCErrorTimer > 2 and value then
+      self.Entity.Server.DCError = 0
+    end
+    if key == 127 and value then
+      self.EnteredAddress = self.EnteredAddress:sub(1,-2)
+    end
+    local char = string.PatternSafe(string.char(key)):gsub("[^%w%d#@*]","")
+    if char and value and not self.EnteredAddress:find(char:upper()) and (#self.EnteredAddress < 6 and char ~= "#" or #self.EnteredAddress >= 6) and #self.EnteredAddress < 7 then
+      self.EnteredAddress = self.EnteredAddress..char:upper()
+    end
+    if key == 13 and value and #self.EnteredAddress >=6 then
+      if 6 <= #self.EnteredAddress and #self.EnteredAddress < 9 and self.EnteredAddress[#self.EnteredAddress] ~= "#" then
+        self.EnteredAddress = self.EnteredAddress.."#"
+      elseif #self.EnteredAddress > 6 then
+        if #self.EnteredAddress > 7 and self:GetServerBool("Local",false) or not self:GetServerBool("HaveEnergy",false) then
+          if not self:GetServerBool("HaveEnergy",false) then
+            self.Entity.Server.DCError = 4
+          else
+            self.Entity.Server.DCError = 3
+          end
+          self.Entity.Server.ErrorAnim = false
+          self.Entity.Server.DCErrorTimer = CurTime()+2
+          self.Entity.Server.DialingAddress = self.EnteredAddress:sub(1,-2)
+          self.Entity.Server.ErrorSymb = self.EnteredAddress:sub(-1,-1)
+        else
+          self.Entity.Server:Dial(self.EnteredAddress)
+        end
+        self.EnteredAddress = ""
+      end
+    end
   end
 else
   local MainFrame = surface.GetTextureID("glebqip/dial screen 1/MainFrame")
@@ -58,12 +98,22 @@ else
     self.Timer8 = nil
   end
 
+
+  local function AnimFromToXY(srcx,srcy,targetx,targety,state)
+    return Lerp(state,srcx,targetx), Lerp(state,srcy,targety)
+  end
+
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
     local Alpha = math.abs(math.sin(CurTime()*math.pi/2))
-    local NLocal = not self:GetServerBool("Local",false)
-    local dialadd = self:GetServerString("DialingAddress")
+    local dialadd = self:GetServerString("DialingAddress","")
     if self.SymbolAnim2 and (CurTime()-self.SymbolAnim2) > 0.6 then dialadd = dialadd..self:GetServerString("DialingAddressDelta","") end
-
+    if dialadd == "" then
+      dialadd = self:GetMonitorString("EnteredAddress","")
+    end
+    if self.Error ~= 0 and self.ErrorSymbol ~= "" then
+      dialadd = dialadd.." "
+    end
+    local NLocal = not self:GetServerBool("Local",false) or #self:GetMonitorString("EnteredAddress","") == 8 or self.Error == 3 or #dialadd == 8
     surface.SetDrawColor(MainColor)
     surface.SetTexture(MainFrame)
     surface.DrawTexturedRectRotated(256,192,512,512,0)
@@ -218,9 +268,9 @@ else
       if Sm2 then
         local anim = math.min(1,(CurTime()-self.SymbolAnim2)*1.66)
         if NLocal then
-          x,y = 258 + anim*214,167 - anim*150 + anim*39*(#dialadd+1)
+          x,y = AnimFromToXY(258,167,472,17+39*(#dialadd+1),anim)
         else
-          x,y = 258 + anim*214,165 - anim*150 + anim*43*(#dialadd+1)
+          x,y = AnimFromToXY(258,167,472,15+43*(#dialadd+1),anim)
         end
         scale = 2.4-(anim*2.4)/90*76
         symbol = self:GetServerString("RingSymbol","")
@@ -231,6 +281,7 @@ else
         wb,hb = 325*xanim,257*yanim
       elseif self.SymbolAnim then
         local anim = math.min(1,(CurTime()-self.SymbolAnim)*1.5)
+        x,y = 258, Lerp(anim,59,165)
         x,y = 258,59+anim*106
         scale = anim*2.4
         symbol = self:GetServerString("DialingSymbol","")
@@ -257,19 +308,24 @@ else
             draw.SimpleText("DIAL ERROR", "Marlett_Err", x,y+85, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             draw.SimpleText("LINE 352", "Marlett_Err", x,y+85+15, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             draw.SimpleText("\"OCCUPIED\"", "Marlett_Err", x,y+85+30, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+          elseif self.Error == 3 then
+            draw.SimpleText("FATAL ERROR", "Marlett_Err", x,y+85, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("LINE 230", "Marlett_Err", x,y+85+15, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("\"DATA PARSE FAILURE\"", "Marlett_Err", x,y+85+30, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+          elseif self.Error == 4 or math.abs(self.Error) == 5 then
+            draw.SimpleText("FATAL ERROR", "Marlett_Err", x,y+85, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("LINE 152", "Marlett_Err", x,y+85+15, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("\"LOW ENERGY INPUT\"", "Marlett_Err", x,y+85+30, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
           end
         elseif timer < 0 then
-          local anim = math.max(0,-timer*1.66)
+          local anim = math.Clamp(-timer*1.66,0,1)
           local animC = math.max(0,0.6-(CurTime()-self.ErrorStart))
-          color = Color(Red.r+255-Red.r,255*anim,255*anim)
           if NLocal then
-            x,y = 258 + anim*214,167 - anim*150 + anim*39*(#dialadd+1)
+            x,y = AnimFromToXY(258,167,472,17+39*(#dialadd),anim)
           else
-            x,y = 258 + anim*214,165 - anim*150 + anim*43*(#dialadd+1)
+            x,y = AnimFromToXY(258,167,472,15+43*(#dialadd),anim)
           end
           scale = 2.4-(anim*2.4)/90*76
-          local xanim = 1-anim*0.8
-          alpha = math.max(0,xanim)
         end
       end
       self.Matrix = Matrix()
@@ -281,7 +337,7 @@ else
       if xb then draw.OutlinedBox(xb,yb,wb,hb,2) end
       --surface.SetAlphaMultiplier(1)
       cam.PushModelMatrix(self.Matrix)
-      draw.SimpleText(symbol, "SGC_Symb", 0,0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText(symbol, "SGC_Symb", 0,0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
       cam.PopModelMatrix()
     end
 
@@ -316,6 +372,10 @@ else
       draw.SimpleText("IN PROGRESS", "Marlett_25", 328,331, MainColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     else
       draw.SimpleText("IDLE", "Marlett_22", 238,297, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    end
+    local entereda = self:GetMonitorString("EnteredAddress","")
+    if #entereda == 9 or #entereda > 6 and entereda[#entereda] == "#" then
+      print("right")
     end
   end
 
@@ -380,32 +440,49 @@ else
     if self.Error ~= 0 and not self.ErrorTimer then -- we fail dial
       self.ErrorTimer = CurTime()
       self.ErrorStart = self.ErrorTimer
-
       if self.Error < 0 then
         self.ErrorTimer = CurTime()+0.6
-        self:EmitSound("alexalx/glebqip/dp_locked.wav",65,100,0.8)
+        --self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,0.8)
+      elseif self.Error >= 3 then
+        self.ErrorTimer = CurTime()+2
+        self:EmitSound("glebqip/error_start.wav",65,100,0.6)
       end
     elseif self.Error == 0 and self.ErrorTimer then
       self.ErrorTimer = nil
       self.ErrorStart = nil
     end
+    if self.Error ~= 0 and self.ErrorTimer and CurTime() - self.ErrorTimer > 0 and not self.Error2Played then
+      self:EmitSound("glebqip/error_end.wav",65,100,0.6)
+      self.Error2Played = true
+    end
+    if self.Error ~= 0 and self.ErrorTimer and CurTime() - self.ErrorTimer > -0.6 and not self.Error1Played then
+      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,0.8)
+      self.Error1Played = true
+    end
+    if (self.Error1Played or self.Error2Played) and self.Error == 0 then
+      self.Error1Played = false
+      self.Error2Played = false
+    end
 
     if self:GetServerBool("ChevronFirst", false) and not self.SymbolAnim then
       self.SymbolAnim = CurTime()
-      self:EmitSound("alexalx/glebqip/dp_locking.wav",65,100,0.8)
+      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,1)
+      --self:EmitSound("alexalx/glebqip/dp_locking.wav",65,100,0.8)
     elseif not self:GetServerBool("ChevronFirst", false) and self.SymbolAnim then
       self.SymbolAnim = nil
     end
     if self:GetServerBool("ChevronSecond", false) and not self.SymbolAnim2 then
       self.SymbolAnim2 = CurTime()
-      self:EmitSound("alexalx/glebqip/dp_locked.wav",65,100,0.8)
+      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,1)
+      --self:EmitSound("glebqip/dial_chevron_encode_fr.wav",65,100,0.8)
+      --self:EmitSound("alexalx/glebqip/dp_locked.wav",65,100,0.8)
     elseif not self:GetServerBool("ChevronSecond", false) and self.SymbolAnim2 then
       self.SymbolAnim2 = nil
     end
 
     if self.OldDialingAddress ~= dialadd then
-      if #self.OldDialingAddress < #dialadd then
-        self:EmitSound("alexalx/glebqip/dp_encoded.wav",65,100,0.8)
+      if #self.OldDialingAddress < #dialadd and chevron ~= 0 then
+        self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
       end
       self.OldDialingAddress = dialadd
     end
@@ -414,12 +491,17 @@ else
       if endT then self:EmitSound("alexalx/glebqip/dp_lock.wav",65,100,0.8) end
       self.OldLocked = endT
     end
+    local LastSecond = active and not open and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
+    if LastSecond then
+      if self.EndTimer == nil then
+        self.EndTimer = CurTime()
+      end
+    end
     if self.EndTimer ~= nil and (open or not active) then
       self.EndTimer = nil
     elseif self.EndTimer and CurTime()-self.EndTimer > 1.2 then
       self.EndTimer = false
     end
-
     --SG1 The fifth race series 8 chevron anim
     if not self:GetServerBool("Local",false) and not inbound and (#dialadd == 7 and not self:GetServerBool("LastChev",false) or #dialadd > 7) and not self.Timer8 then
       self.Timer8 = CurTime()

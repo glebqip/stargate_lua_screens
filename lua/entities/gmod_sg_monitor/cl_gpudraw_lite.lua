@@ -1,4 +1,16 @@
 --Lite lib from Wiremod GPU
+--Mijyuoon's PNG2RT
+local mat_pngrt = CreateMaterial("PngRT", "UnlitGeneric", {
+	["$basetexture"] = "", ["$ignorez"] = 1, ["$model"] = 1,
+	["$vertexcolor"] = 1, ["$vertexalpha"] = 1,
+})
+local function PngToRT(tex)
+	mat_pngrt:SetTexture("$basetexture", tex:GetTexture("$basetexture"))
+	return mat_pngrt
+end
+function draw.SetPNGMaterial(mat)
+	 surface.SetMaterial(PngToRT(mat))
+ end
 
 local matScreen = CreateMaterial("SGCRT","UnlitGeneric",{
 	["$vertexcolor"] = 1,

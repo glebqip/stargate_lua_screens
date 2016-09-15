@@ -17,6 +17,13 @@ function ENT:Initialize()
 
   self.Screen = 0
   self:LoadScreens()
+  if WireLib then
+    self.Inputs = WireLib.CreateSpecialInputs(self,{"Keyboard"},{"ENTITY"})
+  end
+  self.Keys = {}
+
+  self.MenuChoosed = 0
+  self.MenuScrool = 0
 end
 
 function ENT:SpawnFunction(ply, tr)
@@ -39,7 +46,6 @@ function ENT:SpawnFunction(ply, tr)
 end
 
 function ENT:Think()
-  if not self.Server.On then self.Screen = 0 end
   if self.RequestScreenReload then
     self.RequestScreenReload = false
     self:LoadScreens()
@@ -47,39 +53,86 @@ function ENT:Think()
   end
   local srv = self.Server
   self:SetNW2Bool("ServerConnected",IsValid(srv))
-  if (IsValid(srv)) then
-    self:SetNW2Entity("Server",srv)
-    self:SetNW2Int("CurrScreen",self.Screen)
-    --[[
-    self:SetNW2Int("RingAngle", gate:GetRingAng())
-    self:SetNW2Bool("Active", gate.NewActive)
-    self:SetNW2Bool("Open", gate.IsOpen)
-    self:SetNW2Bool("Inbound", gate.Active and not gate.Outbound)
-    --print(gate:GetNW2Bool("ActChevronsL"))
-    self:SetNW2Bool("RingRotation", gate:GetWire("Ring Rotation", 0, true) ~= 0)
-    self:SetNW2Bool("ChevronLocked", gate:GetWire("Chevron Locked", 0, true)> 0)
-    self:SetNW2Int("Chevron", gate:GetWire("Chevron", 0, true))
-    self:SetNW2String("Chevrons", gate:GetWire("Chevrons", "", true))
-    self:SetNW2String("DialingAddress", gate:GetWire("Dialing Address", "", true))
-    self:SetNW2String("DialingSymbol", gate:GetWire("Dialing Symbol", "", true))
-    self:SetNW2String("DialedSymbol", gate:GetWire("Dialed Symbol", "", true))
-    self:SetNW2String("RingSymbol", gate:GetWire("Ring Symbol", "", true))
-    self:SetNW2Bool("Local",gate.GateLocal)
-    ]]
-    --self:SetNWString("SGAddress", gate:GetWire("Dialing Address", "", true))
+  if not IsValid(srv) then
+    self:NextThink(CurTime()+0.05)
+    return true
   end
-  self:NextThink(CurTime()+0.075)
+
+  if not self.Server.On then self.Screen = 0 end
+  if self.Server.State == -1 and self.Screen == 0 and self.Server.On then
+    self.Screen = 1
+  elseif (self.Server.State ~= -1 or not self.Server.On) and self.Screen ~= 0 then
+    self.Screen = 0
+    self.MenuChoosed = 0
+  end
+  self:SetNW2Entity("Server",srv)
+  self:SetNW2Int("CurrScreen",self.Screen)
+  self:SetNW2Int("MenuChoosed",self.MenuChoosed)
+  self:SetNW2Int("MenuScrool",self.MenuScrool)
+  if self.Inputs.Keyboard.Path then
+    local keyb = self.Inputs.Keyboard.Path[1].Entity
+    for k,v in pairs(self.Keys) do
+      if not keyb.ActiveKeys[v] then
+        self:Trigger(k,false)
+        self.Keys[k] = nil
+      end
+    end
+    for k,v in pairs(keyb.ActiveKeys) do
+      local key = keyb:GetRemappedKey(k)
+      if not self.Keys[key] then
+        self:Trigger(key,true)
+        self.Keys[key] = k
+      end
+    end
+  end
+  for k,v in pairs(self.Screens) do
+    v:Think(self.Screen == k)
+  end
+  self:NextThink(CurTime()+0.05)
   return true
 end
 
-function ENT:Touch(ent)
-  if not IsValid(self.Server) then
-    if ent.ServerVer == self.ClientVer then --valid server
-      self.Server = ent
-      local ed = EffectData()
-      ed:SetEntity(self)
-      util.Effect("propspawn", ed, true, true)
+function ENT:Trigger(key, value)
+  if key == 13 and value and self.MenuChoosed > 0 then
+    self.Screen = self.MenuChoosed
+    self.MenuChoosed = 0
+  end
+  if key == 158 and value then
+    if self.MenuChoosed > 0 then
+      self.MenuChoosed = 0
+    else
+      self.MenuChoosed = 1
+      self.MenuScrool = 0
     end
+  end
+  if self.MenuChoosed > 0 and key == 18 and value then
+    self.MenuChoosed = math.min(#self.Screens,self.MenuChoosed + 1)
+  end
+  if self.MenuChoosed > 0 and key == 17 and value then
+    self.MenuChoosed = math.max(1,self.MenuChoosed - 1)
+  end
+  if self.MenuScrool < self.MenuChoosed-8 then
+    self.MenuScrool = self.MenuChoosed-8
+  end
+  if self.MenuScrool > self.MenuChoosed-1 then
+    self.MenuScrool = self.MenuChoosed-1
+  end
+  for k,v in pairs(self.Screens) do
+    if v:Trigger(self.Screen == k,key,value) then return end
+  end
+end
+
+function ENT:Touch(ent)
+  if not IsValid(self.Server) and ent.ServerVer == self.ClientVer then
+    self.Server = ent
+    local ed = EffectData()
+    ed:SetEntity(self)
+    util.Effect("propspawn", ed, true, true)
+  elseif not IsValid(self.Server) and ent.ActiveKeys then
+    self.Keyboard = ent
+    local ed = EffectData()
+    ed:SetEntity(self)
+    util.Effect("propspawn", ed, true, true)
   end
 end
 function ENT:UpdateTransmitState() return TRANSMIT_ALWAYS end

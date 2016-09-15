@@ -4,12 +4,18 @@
 -- ID: 2 --
 ---------------------
 
-local SCR = {}
+local SCR = {
+  Name = "Gate data monitor",
+}
+
 if SERVER then
   function SCR:Initialize()
   end
 
   function SCR:Think()
+  end
+  function SCR:Trigger(curr,key,value)
+    if not curr then return end
   end
 else
   function SCR:Initialize()
@@ -24,7 +30,11 @@ else
     self.IOpenCTimer = CurTime()-1
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/idc screen 1/MainFrame")
+  local MainLeft = surface.GetTextureID("glebqip/idc screen 1/main_left")
+  local MainRight = surface.GetTextureID("glebqip/idc screen 1/main_right")
+  local GateFrame = surface.GetTextureID("glebqip/idc screen 1/gate_frame")
+
+  local Gate = surface.GetTextureID("glebqip/idc screen 1/gate_back")
   local Ring = surface.GetTextureID("glebqip/dial screen 1/Ring")
   local RingArcs = surface.GetTextureID("glebqip/dial screen 1/RingArcs")
   local Chevron = surface.GetTextureID("glebqip/dial screen 1/Chevron")
@@ -50,7 +60,7 @@ else
       local y3 = (y1 + y2) / 2
       local wx = math.sqrt((x2-x1) ^ 2 + (y2-y1) ^ 2)
       local angle = math.deg(math.atan2(y1-y2, x2-x1))
-      render.SetTexture()
+      --render.SetTexture()
       surface.DrawTexturedRectRotated(x3, y3, wx, (sz or 1), angle)
     end
   end
@@ -69,7 +79,7 @@ else
       end
       for i=0,3 do
         if self.Digits2[i+1] then
-          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
           --SCR.drawText(259,402+i*10,self.Digits2[i+1],0,1,SecondColor,font("Marlett",10)) --FIXME
         end
       end
@@ -83,7 +93,7 @@ else
       for i=0,#self.Digits1-1 do
         if self.Digits1[i+1] then
           --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
-          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         end
       end
     end
@@ -92,13 +102,19 @@ else
       surface.DrawRect(88,350,158,22)
     end
     surface.SetDrawColor(MainColor)
-    surface.SetTexture(MainFrame)
-    surface.DrawTexturedRectRotated(256,192,512,512,0)
+    surface.SetTexture(MainLeft)
+    surface.DrawTexturedRectRotated(127,192,256,512,0)
+    surface.SetTexture(MainRight)
+    surface.DrawTexturedRectRotated(380,303,256,256,0)
+    surface.SetTexture(GateFrame)
+      surface.DrawTexturedRectRotated(380,105,256,256,0)
+    surface.SetTexture(Gate)
+      surface.DrawTexturedRectRotated(381,105,256,256,0)
     surface.SetDrawColor(SecondColor)
     surface.SetTexture(RingArcs)
-    surface.DrawTexturedRectRotated(381,105,196,196,0)
+      surface.DrawTexturedRectRotated(381,105,196,196,0)
     surface.SetTexture(Ring)
-    surface.DrawTexturedRectRotated(381,105,197,197,self:GetServerInt("RingAngle",0)-4.615)
+      surface.DrawTexturedRectRotated(381,105,197,197,self:GetServerInt("RingAngle",0)-4.615)
 
     surface.SetTexture(OpenRed)
     if open then
@@ -155,18 +171,18 @@ else
       surface.DrawTexturedRectRotated(381+X2,105+Y2,12,12,ang+180)
     end
 
-    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+    draw.SimpleText("RECEIVING DATA", "Marlett_21", 90, 19, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 
-    draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+    draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 
     if open then
-      draw.SimpleText("ACTIVE", "Marlett_15", 330, 210, Color(20,160,20), TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+      draw.SimpleText("ACTIVE", "Marlett_15", 330, 210, Color(20,160,20), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     else
       local Alpha = math.abs(math.sin(CurTime()*math.pi/2))
       surface.SetAlphaMultiplier(Alpha)
-      draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER)
+      draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     end
-    if open then draw.SimpleText("PROCESSING", "Marlett_15", 8, 366, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CSCRER) end
+    if open then draw.SimpleText("PROCESSING", "Marlett_15", 8, 366, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
   end
 
   function SCR:Think(curr)
