@@ -6,6 +6,7 @@
 
 local SCR = {
   Name = "Gate data monitor",
+  ID = 2,
 }
 
 if SERVER then
@@ -30,18 +31,18 @@ else
     self.IOpenCTimer = CurTime()-1
   end
 
-  local MainLeft = surface.GetTextureID("glebqip/idc screen 1/main_left")
-  local MainRight = surface.GetTextureID("glebqip/idc screen 1/main_right")
-  local GateFrame = surface.GetTextureID("glebqip/idc screen 1/gate_frame")
+  local MainLeft = surface.GetTextureID("glebqip/data screen 1/main_left")
+  local MainRight = surface.GetTextureID("glebqip/data screen 1/main_right")
+  local GateFrame = surface.GetTextureID("glebqip/data screen 1/gate_frame")
 
-  local Gate = surface.GetTextureID("glebqip/idc screen 1/gate_back")
+  local Gate = surface.GetTextureID("glebqip/data screen 1/gate_back")
   local Ring = surface.GetTextureID("glebqip/dial screen 1/Ring")
   local RingArcs = surface.GetTextureID("glebqip/dial screen 1/RingArcs")
   local Chevron = surface.GetTextureID("glebqip/dial screen 1/Chevron")
   local Chevron7 = surface.GetTextureID("glebqip/dial screen 1/Chevron7")
   local ChevronBox = surface.GetTextureID("glebqip/dial screen 1/ChevronBox")
 
-  local OpenRed = surface.GetTextureID("glebqip/idc screen 1/OpenRed")
+  local OpenRed = surface.GetTextureID("glebqip/data screen 1/OpenRed")
 
   local Red = Color(239,0,0)
 
@@ -143,7 +144,7 @@ else
       if self.Boxes[i] then
         local x,y = 0,0
         if i > 18 then x = 34 end
-        if i > 9 and i < 18 or i > 27 then y = 32 end
+        if i > 9 and i < 19 or i > 27 then y = 32 end
         if self.Boxes[i] then
           surface.DrawRect(436+i%3*6+x,313+math.ceil(i/3-1)%3*6+y,4,4)
         end
@@ -180,7 +181,11 @@ else
     else
       local Alpha = math.abs(math.sin(CurTime()*math.pi/2))
       surface.SetAlphaMultiplier(Alpha)
-      draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      if self:GetServerBool("Connected",false) then
+        draw.SimpleText("IDLE", "Marlett_15", 330, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      else
+        draw.SimpleText("UNKNOWN", "Marlett_15", 330, 210, Red, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      end
     end
     if open then draw.SimpleText("PROCESSING", "Marlett_15", 8, 366, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
   end
@@ -231,4 +236,4 @@ else
   end
 end
 
-return 2,SCR
+return SCR

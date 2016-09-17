@@ -6,6 +6,8 @@ surface.CreateFont("SGC_Symb", {font="Stargate Address Glyphs Concept", size=90,
 surface.CreateFont("Marlett_10", {font="Marlett", size=10, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_12", {font="Marlett", size=12, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_15", {font="Marlett", size=15, weight=800, antialias=true, additive=false, })
+surface.CreateFont("Marlett_16", {font="Marlett", size=16, weight=800, antialias=true, additive=false, })
+surface.CreateFont("Marlett_18", {font="Marlett", size=18, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_21", {font="Marlett", size=21, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_22", {font="Marlett", size=22, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_25", {font="Marlett", size=25, weight=800, antialias=true, additive=false, })
@@ -22,8 +24,8 @@ surface.CreateFont("NOSignal", {font="Arial Black", size=30, weight=800, antiali
 
 local Select = surface.GetTextureID("glebqip/Select")
 
-local SelfDestructCode = surface.GetTextureID("glebqip/selfdestruct_code")
-local SelfDestructStandby = surface.GetTextureID("glebqip/selfdestruct_standby")
+local SelfDestructCode = surface.GetTextureID("glebqip/active screen 1/sd_code")
+local SelfDestructStandby = surface.GetTextureID("glebqip/active screen 1/sd_standby")
 
 if (SGLanguage ~=nil and SGLanguage.GetMessage ~=nil) then
   ENT.Category = SGLanguage.GetMessage("entity_main_cat")
@@ -282,7 +284,7 @@ function ENT:Think()
   end
   local timer = self.Server:GetNW2Int("SDTimer",CurTime())-CurTime()
   if self.Server:GetNW2Bool("SelfDestruct",false) and self.DSound ~= (timer%1 < 0.5) then
-    if self.DSound then self:EmitSound("glebqip/self_destruct_beep.wav",65,100,0.8) end
+    if self.DSound then self:EmitSound("glebqip/self_destruct_beep.wav",65,100,0.2) end
     self.DSound = timer%1 < 0.5
   end
 end

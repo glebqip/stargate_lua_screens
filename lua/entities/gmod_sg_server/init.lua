@@ -23,14 +23,14 @@ function ENT:Initialize()
   self.StartTimer = false
   self.StartState = 0
 
-    self.SelfDestructCodes = {
-      {"12345678","Test1"},
-      {"98765432","Test2"},
-    }
-    self.SelfDestructResetCodes = {
-      {"12345678","Test1"},
-      {"98765432","Test2"},
-    }
+  self.SelfDestructCodes = {
+    {"12345678","Test1"},
+    {"98765432","Test2"},
+  }
+  self.SelfDestructResetCodes = {
+    {"12345678","Test1"},
+    {"98765432","Test2"},
+  }
   self.SelfDestructClients = {}
   self.SelfDestruct = false
   self.SelfDestructTimer = CurTime()
@@ -70,7 +70,7 @@ function ENT:Think()
   self:SetNW2Bool("On",self.On)
 
   --Start emulation
-  if self.On and self.State > -1  then
+  if self.On and self.State > -1 then
     local time = CurTime() - self.StartTimer
     if self.State > 0 and math.random() > 0.95 then
       self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55,100,0.3)
@@ -145,7 +145,7 @@ function ENT:Think()
     if LastChev and dialsymb == "" and not ringrot and chevron ~= 0 and not locked then
       locked = 1
     end
---    print(gate.Chevron[7])
+    -- print(gate.Chevron[7])
     --print(gate.ScrAddress)
     self:SetNW2Int("RingAngle", gate:GetRingAng())
     self:SetNW2Bool("Active", active)
@@ -202,7 +202,7 @@ function ENT:Think()
     if chevron == 0 and self.ErrorSymb and self.DCError == 0 then --Reset err symbol if we don't need it
       self.ErrorSymb = nil
     end
-    if self.DCError ~= 0 and CurTime()-self.DCErrorTimer > 10 or active and  chevron >= 0 then
+    if self.DCError ~= 0 and CurTime()-self.DCErrorTimer > 10 or active and chevron >= 0 then
       self.DCError = 0
     end
 
@@ -267,13 +267,16 @@ function ENT:Dial(addr)
 end
 
 function ENT:Touch(ent)
-  if not IsValid(self.LockedGate) then
-    if (ent.IsGroupStargate) then --IsStargate
-      self.LockedGate = ent
-      local ed = EffectData()
-      ed:SetEntity(self)
-      util.Effect("propspawn", ed, true, true)
-    end
+  if not IsValid(self.LockedGate) and (ent.IsGroupStargate) then
+    self.LockedGate = ent
+    local ed = EffectData()
+    ed:SetEntity(self)
+    util.Effect("propspawn", ed, true, true)
+  elseif not IsValid(self.IDCReceiver) and (ent.GDOStatus) then
+    self.IDCReceiver = ent
+    local ed = EffectData()
+    ed:SetEntity(self)
+    util.Effect("propspawn", ed, true, true)
   end
 end
 
@@ -292,6 +295,6 @@ function ENT:Use(_,_,val)
 end
 
 function ENT:OnRemove()
-    self.OnSound:Stop()
+  self.OnSound:Stop()
 end
 function ENT:UpdateTransmitState() return TRANSMIT_ALWAYS end

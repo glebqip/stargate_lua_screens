@@ -5,6 +5,7 @@
 ---------------------
 local SCR = {
   Name = "Dialing computer",
+  ID = 1,
 }
 if SERVER then
   function SCR:Initialize()
@@ -140,7 +141,7 @@ else
       if self.Boxes2[i] then
         local x,y = 0,0
         if i > 18 then x = 34 end
-        if i > 9 and i < 18 or i > 27 then y = 32 end
+        if i > 9 and i < 19 or i > 27 then y = 32 end
         if self.Boxes2[i] then
           surface.DrawRect(24+i%3*6+x,229+math.ceil(i/3-1)%3*6+y,4,4)
         end
@@ -370,12 +371,14 @@ else
     elseif self:GetServerBool("Active",false) then
       draw.SimpleText("SEQUENCE", "Marlett_25", 328,311, MainColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
       draw.SimpleText("IN PROGRESS", "Marlett_25", 328,331, MainColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    else
+    elseif self:GetServerBool("Connected",false) then
       draw.SimpleText("IDLE", "Marlett_22", 238,297, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    else
+      draw.SimpleText("DISCONNECTED", "Marlett_22", 328,320, Red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     local entereda = self:GetMonitorString("EnteredAddress","")
     if #entereda == 9 or #entereda > 6 and entereda[#entereda] == "#" then
-      print("right")
+      --TODO
     end
   end
 
@@ -481,7 +484,7 @@ else
     end
 
     if self.OldDialingAddress ~= dialadd then
-      if #self.OldDialingAddress < #dialadd and chevron ~= 0 then
+      if #self.OldDialingAddress < #dialadd and chevron ~= 0 and not inbound then
         self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
       end
       self.OldDialingAddress = dialadd
@@ -512,4 +515,4 @@ else
   end
 end
 
-return 1, SCR
+return  SCR

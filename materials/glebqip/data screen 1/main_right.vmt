@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/selfdestruct_entercode"
+	$basetexture "glebqip/data screen 1/main_right"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

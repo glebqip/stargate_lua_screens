@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/Circle_1"
+	$basetexture "glebqip/active screen 1/sd_entercode"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

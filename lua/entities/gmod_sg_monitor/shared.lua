@@ -41,9 +41,10 @@ end
 
 function ENT:LoadScreens()
   self.Screens = self.Screens or {}
-  for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
+  for x,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do
     local init = false
-    local ID,SCR = include("entities/gmod_sg_monitor/screens/"..filename)
+    local SCR,test = include("entities/gmod_sg_monitor/screens/"..filename)
+    local ID = SCR.ID
     if not self.Screens[ID] then
       self.Screens[ID] = {}
       init = true

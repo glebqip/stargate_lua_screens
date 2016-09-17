@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/selfdestruct_standby"
+	$basetexture "glebqip/integrity screen 1/warn_receive"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

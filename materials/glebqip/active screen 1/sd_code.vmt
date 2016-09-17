@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/idc screen 1/MainFrame"
+	$basetexture "glebqip/active screen 1/sd_code"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

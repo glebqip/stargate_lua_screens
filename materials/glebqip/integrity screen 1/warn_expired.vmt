@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/Circle_2"
+	$basetexture "glebqip/integrity screen 1/warn_expired"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/idc screen 1/main_left"
+	$basetexture "glebqip/integrity screen 1/warn_incomming"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

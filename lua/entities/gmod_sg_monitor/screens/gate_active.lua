@@ -6,6 +6,7 @@
 
 local SCR = {
   Name = "Gate active",
+  ID = 3,
 }
 
 if SERVER then
@@ -168,10 +169,16 @@ else
     self.Digits1Timer = CurTime()
     self.Digits2 = {}
     self.Digits2Timer = CurTime()
+
+    self.Digits3 = ""
+    self.Digits3Timer = CurTime()
+
+    self.Lines = {}
+    self.LinesTimer = CurTime()
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/selfdestruct_mainframe")
-  local EnterCode = surface.GetTextureID("glebqip/selfdestruct_entercode")
+  local MainFrame = surface.GetTextureID("glebqip/active screen 1/mainframe")
+  local EnterCode = surface.GetTextureID("glebqip/active screen 1/sd_entercode")
 
   local IDCLeft = surface.GetTextureID("glebqip/idc screen 1/main_left")
   local IDCRight = surface.GetTextureID("glebqip/idc screen 1/main_right")
@@ -186,10 +193,13 @@ else
 
   local OpenRed = surface.GetTextureID("glebqip/idc screen 1/OpenRed")
 
+  local BWCircle = surface.GetTextureID("glebqip/active screen 1/circle")
+
   local Red = Color(239,0,0)
 
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
-    local open = self:GetServerBool("Open",false) or self:GetServerBool("SelfDestruct",0)
+    local connected = self:GetServerBool("Connected",false)
+    local open = connected and (self:GetServerBool("Open",false) or self:GetServerBool("SelfDestruct",false))
     local anim = self.StartAnim and CurTime()-self.StartAnim or 1.5
     local fanim1 = math.Clamp(anim*4,0,1)
     local fanim2 = math.Clamp((anim-0.25)*4,0,1)
@@ -212,16 +222,50 @@ else
         end
       end
     end
+    local py = (CurTime()-self.Digits3Timer)%0.1*10-2
+    for i=1,#self.Digits3 do
+      draw.SimpleText(self.Digits3[i], "Marlett_15", 330-i*7-py*7-2,333, SecondColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+    end
+    surface.SetDrawColor(Color(0,133,44))
+    if connected then surface.DrawRect(430,205,58,-44*(CurTime()%1)) end
+
+    --surface.SetDrawColor(Red)
+    if connected then
+      for i=0,(#self.Lines)*(CurTime()-self.LinesTimer) do
+        local x1 = 56/#self.Lines*i
+        local x2 = 56/#self.Lines*(i+1)
+        local y1 = self.Lines[i] or 0
+        local y2 = self.Lines[i+1] or 0
+        surface.DrawLine(23+x1,167+y1,23+x2,167+y2)
+      end
+    end
+
+    surface.SetDrawColor(MainColor)
+    surface.SetTexture(MainFrame)
+    surface.DrawTexturedRectRotated(256,192,512,512,0)
+    draw.SimpleText("SYSTEMS", "Marlett_12", 459,219, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+    surface.SetDrawColor(Color(255,255,255))
+    surface.SetTexture(BWCircle)
+    for i=0,3 do
+      surface.DrawTexturedRectRotated(437+i*15,153,13,13,(CurTime()%2*360))
+    end
+
+    surface.SetDrawColor(Color(0,133,44))
+    surface.DrawLine(23,167,23+56*math.Clamp((CurTime()-self.LinesTimer)*4,0,1),167)
     local code = self:GetMonitorString("SDRCode","")
     if #code > 0 then
+      surface.SetDrawColor(Color(0,0,0))
+      surface.DrawRect(166,325,180,16)
       surface.SetDrawColor(MainColor)
       surface.SetTexture(EnterCode)
       surface.DrawTexturedRectRotated(256,321,256,64,0)
       draw.SimpleText("ENTER CODE", "Marlett_29", 256,345, Color(100,35,15), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
     elseif self:GetServerBool("SelfDestruct",false) then
-      draw.SimpleText("AUTODESTRUCT IN PROGRESS", "Marlett_21", 256,310, Color(215,75,35), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      draw.SimpleText("AUTODESTRUCT IN PROGRESS", "Marlett_21", 256,290, Color(215,75,35), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
     elseif open then
-      draw.SimpleText("DEVICE ACTIVE", "Marlett_35", 256,300, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      draw.SimpleText("DEVICE ACTIVE", "Marlett_35", 256,290, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+    elseif not connected then
+      draw.SimpleText("OFFLINE", "Marlett_35", 256,290, Red, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
     end
     for i=1,#code do
       draw.SimpleText(code[i], "Marlett_35", 126+i*29,329, Color(200,200,182), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -232,17 +276,6 @@ else
       local name = self:GetMonitorString("SDRName","")
       for i=1,#name do draw.SimpleText(name[i], "Marlett_12", 132+i*11,301, Color(200,200,182), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
     end
-    surface.SetDrawColor(Color(0,0,0))
-    surface.DrawRect(17,54,40,-15)
-    surface.DrawRect(17,123,40,15)
-    surface.DrawRect(465,54,40,-15)
-    surface.DrawRect(465,123,40,15)
-
-    surface.SetDrawColor(Color(0,133,44))
-    surface.DrawRect(431,205,58,-44*(CurTime()%2/2))
-    surface.SetDrawColor(MainColor)
-    surface.SetTexture(MainFrame)
-    surface.DrawTexturedRectRotated(256,192,512,512,0)
 
     surface.SetDrawColor(Color(54,66,11))
     local banim = 8-math.floor(CurTime()%2*10)
@@ -270,64 +303,64 @@ else
     self.Matrix:Scale(Vector(scale,scale,scale))
     self.Matrix:Translate(Vector(0,0,0))
     cam.PushModelMatrix(self.Matrix)
-      surface.SetTexture(Gate)
-      surface.DrawTexturedRectRotated(0,0,256,256,0)
-      surface.SetDrawColor(SecondColor)
-      surface.SetTexture(RingArcs)
-      surface.DrawTexturedRectRotated(0,0,196,196,0)
-      surface.SetTexture(Ring)
-      surface.DrawTexturedRectRotated(0,0,197,197,self:GetServerInt("RingAngle",0)-4.615)
-      surface.SetTexture(OpenRed)
-      if open then
-        for i=0,(CurTime()-self.IOpenCTimer > 2 and 2 or 0) do
-          local anim = (CurTime()+i*2-self.IOpenCTimer)%4
-          if anim < 3 then
-            surface.SetDrawColor(Red)
-            surface.DrawTexturedRectRotated(0,0,256*anim/3,256*anim/3,0)
-          elseif anim < 4 then
-            surface.SetDrawColor(Color(220,0,0,(4-anim)*255))
-            surface.DrawTexturedRectRotated(0,0,256,256,0)
-          end
+    surface.SetTexture(Gate)
+    surface.DrawTexturedRectRotated(0,0,256,256,0)
+    surface.SetDrawColor(SecondColor)
+    surface.SetTexture(RingArcs)
+    surface.DrawTexturedRectRotated(0,0,196,196,0)
+    surface.SetTexture(Ring)
+    surface.DrawTexturedRectRotated(0,0,197,197,self:GetServerInt("RingAngle",0)-4.615)
+    surface.SetTexture(OpenRed)
+    if open then
+      for i=0,(CurTime()-self.IOpenCTimer > 2 and 2 or 0) do
+        local anim = (CurTime()+i*2-self.IOpenCTimer)%4
+        if anim < 3 then
+          surface.SetDrawColor(Red)
+          surface.DrawTexturedRectRotated(0,0,256*anim/3,256*anim/3,0)
+        elseif anim < 4 then
+          surface.SetDrawColor(Color(220,0,0,(4-anim)*255))
+          surface.DrawTexturedRectRotated(0,0,256,256,0)
         end
+      end
 
-        surface.SetDrawColor(Red)
-        draw.DrawTLine(0,-74,0,74,2)
-        draw.DrawTLine(-75,0,75,0,2)
+      surface.SetDrawColor(Red)
+      draw.DrawTLine(0,-74,0,74,2)
+      draw.DrawTLine(-75,0,75,0,2)
+    else
+      surface.SetDrawColor(MainColor)
+      draw.DrawTLine(0,-22,0,22,2)
+      draw.DrawTLine(-22,0,22,0,2)
+    end
+
+    surface.SetDrawColor(SecondColor)
+
+    local ChevronState = math.Clamp((CurTime()-self.IOpenCTimer)*4,0,1)
+    if not self:GetServerBool("Open") then ChevronState = 1-ChevronState end
+    for i=1,9 do
+      local ang = 180-(360/9)*i
+      local rad = math.rad(ang)
+      local X,Y = math.sin(rad)*(86-ChevronState*4.5), math.cos(rad)*(86-ChevronState*4.5)
+      local X2,Y2 = math.sin(rad)*(93+ChevronState*4.5), math.cos(rad)*(93+ChevronState*4.5)
+      local active = self:GetServerString("Chevrons")[i == 9 and 7 or i>5 and i-2 or i > 3 and i+4 or i] == "1"
+      surface.SetDrawColor(active and Red or SecondColor)
+      if i < 9 then
+        surface.SetTexture(Chevron)
+        surface.DrawTexturedRectRotated(0+X,0+Y,25,25,ang+180)
       else
-        surface.SetDrawColor(MainColor)
-        draw.DrawTLine(0,-22,0,22,2)
-        draw.DrawTLine(-22,0,22,0,2)
+        surface.SetTexture(Chevron7)
+        surface.DrawTexturedRectRotated(0+X,0+Y,25,25,0)
       end
-
-      surface.SetDrawColor(SecondColor)
-
-      local ChevronState = math.Clamp((CurTime()-self.IOpenCTimer)*4,0,1)
-      if not self:GetServerBool("Open") then ChevronState = 1-ChevronState end
-      for i=1,9 do
-        local ang = 180-(360/9)*i
-        local rad = math.rad(ang)
-        local X,Y = math.sin(rad)*(86-ChevronState*4.5), math.cos(rad)*(86-ChevronState*4.5)
-        local X2,Y2 = math.sin(rad)*(93+ChevronState*4.5), math.cos(rad)*(93+ChevronState*4.5)
-        local active = self:GetServerString("Chevrons")[i == 9 and 7 or i>5 and i-2 or i > 3 and i+4 or i] == "1"
-        surface.SetDrawColor(active and Red or SecondColor)
-        if i < 9 then
-          surface.SetTexture(Chevron)
-          surface.DrawTexturedRectRotated(0+X,0+Y,25,25,ang+180)
-        else
-          surface.SetTexture(Chevron7)
-          surface.DrawTexturedRectRotated(0+X,0+Y,25,25,0)
-        end
-        surface.SetDrawColor(active and Red or ChevBoxesColor)
-        surface.SetTexture(ChevronBox)
-        surface.DrawTexturedRectRotated(0+X2,0+Y2,12,12,ang+180)
-      end
-      if self:GetServerBool("SelfDestruct",0) and anim > 2 then
-        local time = math.abs(self:GetServerInt("SDTimer",CurTime())-CurTime())
-        local str1 = string.format("%02d", math.floor(time/60))
-        local str2 = string.format(".%02d",math.floor(time%60))
-        draw.SimpleText(str1, "Marlett_45", 0-2,0, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-        draw.SimpleText(str2, "Marlett_45", -5,0, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-      end
+      surface.SetDrawColor(active and Red or ChevBoxesColor)
+      surface.SetTexture(ChevronBox)
+      surface.DrawTexturedRectRotated(0+X2,0+Y2,12,12,ang+180)
+    end
+    if self:GetServerBool("SelfDestruct",false) and anim > 2 then
+      local time = math.abs(self:GetServerInt("SDTimer",CurTime())-CurTime())
+      local str1 = string.format("%02d", math.floor(time/60))
+      local str2 = string.format(".%02d",math.floor(time%60))
+      draw.SimpleText(str1, "Marlett_45", 0-2,0, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+      draw.SimpleText(str2, "Marlett_45", -5,0, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    end
     cam.PopModelMatrix()
 
     if self:GetMonitorInt("SDRState",0) > 1 then
@@ -347,30 +380,73 @@ else
       end
       return
     end
+    local connected = self:GetServerBool("Connected",false)
+    local active = connected and self:GetServerBool("Active",false)
+    local open = active and self:GetServerBool("Open",false)
     --self.Digits2 = {}
     if CurTime()-self.Digits1Timer > 0.25 then
       str = ""
-      for _=1,7 do
-        str = str..tostring(math.random(0,9))
+      if connected then
+        for _=1,7 do
+          str = str..tostring(math.random(0,9))
+        end
+        table.insert(self.Digits1,1,str)
+      else
+        table.insert(self.Digits1,1,nil)
       end
-      table.insert(self.Digits1,1,str)
       table.remove(self.Digits1,10)
       self.Digits1Timer = CurTime()
     end
     if CurTime()-self.Digits2Timer > 0.25 then
       str = ""
-      for _=1,7 do
-        str = str..tostring(math.random(0,9))
+      if connected then
+        for _=1,7 do
+          str = str..tostring(math.random(0,9))
+        end
+        table.insert(self.Digits2,1,str)
+      else
+        table.insert(self.Digits2,1,nil)
       end
-      table.insert(self.Digits2,1,str)
       table.remove(self.Digits2,10)
       self.Digits2Timer = CurTime()
     end
-    local connected = self:GetServerBool("Connected",false)
-    local active = self:GetServerBool("Active",false)
-    local open = self:GetServerBool("Open",false)
+    if connected then
+      if CurTime()-self.Digits3Timer > 0.1 then
+        self.Digits3 = tostring(math.random(0,9))..self.Digits3:sub(1,21)
+        self.Digits3Timer = CurTime()
+      end
+      if CurTime()-self.LinesTimer > 1 then
+        local maxval = math.Rand(3,13)
+        for i=1,40 do
+          if math.random() > 0.7 then
+            maxval = math.Rand(0,13)
+          end
+          if i%2 > 0 then
+            self.Lines[i] = math.Rand(-maxval/3,maxval)
+          else
+            self.Lines[i] = math.Rand(maxval/3,-maxval)
+          end
+        end
+        self.LinesTimer = CurTime()
+      end
+    else
+      if CurTime()-self.Digits3Timer > 0.1 then
+        self.Digits3 = " "..self.Digits3:sub(1,21)
+        self.Digits3Timer = CurTime()
+      end
+      if CurTime()-self.LinesTimer > 1 then
+        local maxval = math.Rand(3,13)
+        for i=1,40 do
+          self.Lines[i] = nil
+        end
+        self.LinesTimer = CurTime()
+      end
+    end
     if self:GetServerBool("SelfDestruct",false) and not self.StartAnim then
       self.StartAnim = CurTime()
+    end
+    if curr and not self.StartAnim then
+      self.StartAnim = CurTime()-3
     end
     if self.Open ~= open then
       self.IOpenCTimer = CurTime()
@@ -379,4 +455,4 @@ else
   end
 end
 
-return 3,SCR
+return SCR

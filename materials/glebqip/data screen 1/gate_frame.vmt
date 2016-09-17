@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/selfdestruct_mainframe"
+	$basetexture "glebqip/data screen 1/gate_frame"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1
