@@ -20,7 +20,7 @@ if SERVER then
 else
   function SCR:Initialize()
     self.Digits = {}
-    self.DigitsTimer = CurTime()
+    self.DigitsTimer = CurTime()-10
     self.GradientsTimers = {}
     self.GradientSpeeds = {}
     for i=1,30 do
@@ -42,6 +42,7 @@ else
 
     surface.SetTexture(Gradient)
     surface.SetDrawColor(MainColor)
+
     for i=1,3*5*3*2 do
       local id = math.ceil(i/3)-1
       if (CurTime() - self.GradientsTimers[id+1])/self.GradientSpeeds[id+1] > 1 then continue end

@@ -14,6 +14,9 @@ function ENT:Initialize()
   self:PhysicsInit(SOLID_VPHYSICS)
   self:SetMoveType(MOVETYPE_VPHYSICS)
   self:SetSolid(SOLID_VPHYSICS)
+  self:SetUseType(1)
+
+  self.On = true
 
   self.Screen = 0
   self:LoadScreens()
@@ -53,6 +56,7 @@ function ENT:Think()
   end
   local srv = self.Server
   self:SetNW2Bool("ServerConnected",IsValid(srv))
+  self:SetNW2Bool("On",self.On)
   if not IsValid(srv) then
     self:NextThink(CurTime()+0.05)
     return true
@@ -119,6 +123,12 @@ function ENT:Trigger(key, value)
   end
   for k,v in pairs(self.Screens) do
     if v:Trigger(self.Screen == k,key,value) then return end
+  end
+end
+
+function ENT:Use(_,_,val)
+  if val > 0 then
+    self.On = not self.On
   end
 end
 

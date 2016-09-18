@@ -20,34 +20,42 @@ if SERVER then
   end
   function SCR:Trigger(curr,key, value)
     if not curr or self:GetMonitorInt("SDState",0) ~= 0 then return end
-    if self.Entity.Server.DCError ~= 0 and CurTime()-self.Entity.Server.DCErrorTimer > 2 and value then
-      self.Entity.Server.DCError = 0
+    if self:GetMonitorBool("ServerConnected",false) then
+       -- \, iris toggle
+      if key == 92 and value then self.Entity.Server.Iris = not self.Entity.Server.Iris end
+      -- Backspace, close gate
+      if key == 127 and self:GetServerBool("Connected",false) and self:GetServerBool("Active",false) and value then self.Entity.Server.LockedGate:AbortDialling() end
     end
-    if key == 127 and value then
-      self.EnteredAddress = self.EnteredAddress:sub(1,-2)
-    end
-    local char = string.PatternSafe(string.char(key)):gsub("[^%w%d#@*]","")
-    if char and value and not self.EnteredAddress:find(char:upper()) and (#self.EnteredAddress < 6 and char ~= "#" or #self.EnteredAddress >= 6) and #self.EnteredAddress < 7 then
-      self.EnteredAddress = self.EnteredAddress..char:upper()
-    end
-    if key == 13 and value and #self.EnteredAddress >=6 then
-      if 6 <= #self.EnteredAddress and #self.EnteredAddress < 9 and self.EnteredAddress[#self.EnteredAddress] ~= "#" then
-        self.EnteredAddress = self.EnteredAddress.."#"
-      elseif #self.EnteredAddress > 6 then
-        if #self.EnteredAddress > 7 and self:GetServerBool("Local",false) or not self:GetServerBool("HaveEnergy",false) then
-          if not self:GetServerBool("HaveEnergy",false) then
-            self.Entity.Server.DCError = 4
+    --Reset error by pressing any key
+    if self.Entity.Server.DCError ~= 0 and CurTime()-self.Entity.Server.DCErrorTimer > 2 and value then self.Entity.Server.DCError = 0 end
+    if not self:GetServerBool("Active",false) then
+      --Backspace,remove a 1 symbol
+      if key == 127 and value then self.EnteredAddress = self.EnteredAddress:sub(1,-2) end
+      --Any char, add a 1 symbol
+      local char = string.PatternSafe(string.char(key)):gsub("[^%w%d#@*]","")
+      if char and value and not self.EnteredAddress:find(char:upper()) and (#self.EnteredAddress < 6 and char ~= "#" or #self.EnteredAddress >= 6) and #self.EnteredAddress < 7 then
+        self.EnteredAddress = self.EnteredAddress..char:upper()
+      end
+      --Enter, try dial or get error
+      if key == 13 and value and #self.EnteredAddress >=6 then
+        if 6 <= #self.EnteredAddress and #self.EnteredAddress < 9 and self.EnteredAddress[#self.EnteredAddress] ~= "#" then
+          self.EnteredAddress = self.EnteredAddress.."#"
+        elseif #self.EnteredAddress > 6 then
+          if #self.EnteredAddress > 7 and self:GetServerBool("Local",false) or not self:GetServerBool("HaveEnergy",false) then
+            if not self:GetServerBool("HaveEnergy",false) then
+              self.Entity.Server.DCError = 4
+            else
+              self.Entity.Server.DCError = 3
+            end
+            self.Entity.Server.ErrorAnim = false
+            self.Entity.Server.DCErrorTimer = CurTime()+2
+            self.Entity.Server.DialingAddress = self.EnteredAddress:sub(1,-2)
+            self.Entity.Server.ErrorSymb = self.EnteredAddress:sub(-1,-1)
           else
-            self.Entity.Server.DCError = 3
+            self.Entity.Server:Dial(self.EnteredAddress)
           end
-          self.Entity.Server.ErrorAnim = false
-          self.Entity.Server.DCErrorTimer = CurTime()+2
-          self.Entity.Server.DialingAddress = self.EnteredAddress:sub(1,-2)
-          self.Entity.Server.ErrorSymb = self.EnteredAddress:sub(-1,-1)
-        else
-          self.Entity.Server:Dial(self.EnteredAddress)
+          self.EnteredAddress = ""
         end
-        self.EnteredAddress = ""
       end
     end
   end
@@ -62,12 +70,12 @@ else
   local Gradient = surface.GetTextureID("vgui/gradient_down")
   local Red = Color(239,0,0)
 
-  function SCR:Initialize()
+  function SCR:Initialize(reinital)
     -- Blinking boxes
     self.Boxes1 = {}
     self.Boxes2 = {}
-    self.Boxes1Timer = CurTime()
-    self.Boxes2Timer = CurTime()
+    self.Boxes1Timer = CurTime()-10
+    self.Boxes2Timer = CurTime()-10
 
     --Gradient anim boxes
     self.GradientsTimers = {}
@@ -75,9 +83,9 @@ else
 
     --Random digits
     self.Digits = {}
-    self.DigitsTimer = CurTime()
+    self.DigitsTimer = CurTime()-10
     --Chevron open animation
-    self.OpenCTimer = CurTime()-1
+    self.OpenCTimer = CurTime()-10
     --Dial symbol animation
     self.SymbolAnim = nil
     self.SymbolAnim2 = nil
@@ -419,7 +427,7 @@ else
         end
         table.insert(self.Digits,1,str)
       else
-        table.insert(self.Digits,1,"")
+        table.insert(self.Digits,1,false)
       end
       table.remove(self.Digits,14)
       self.DigitsTimer = CurTime()
@@ -494,13 +502,13 @@ else
       if endT then self:EmitSound("alexalx/glebqip/dp_lock.wav",65,100,0.8) end
       self.OldLocked = endT
     end
-    local LastSecond = active and not open and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
+    local LastSecond = active and not open and not inbound and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
     if LastSecond then
       if self.EndTimer == nil then
         self.EndTimer = CurTime()
       end
     end
-    if self.EndTimer ~= nil and (open or not active) then
+    if self.EndTimer ~= nil and (open or not active or inbound) then
       self.EndTimer = nil
     elseif self.EndTimer and CurTime()-self.EndTimer > 1.2 then
       self.EndTimer = false

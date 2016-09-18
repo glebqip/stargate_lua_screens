@@ -164,34 +164,38 @@ if SERVER then
     end
   end
 else
-  function SCR:Initialize()
-    self.Digits1 = {}
-    self.Digits1Timer = CurTime()
-    self.Digits2 = {}
-    self.Digits2Timer = CurTime()
+  function SCR:Initialize(reinit)
+    if not reinit then
+      self.Digits1 = {}
+      self.Digits1Timer = CurTime()-10
+      self.Digits2 = {}
+      self.Digits2Timer = CurTime()-10
 
-    self.Digits3 = ""
-    self.Digits3Timer = CurTime()
+      self.Digits3 = ""
+      self.Digits3Timer = CurTime()-10
 
-    self.Lines = {}
-    self.LinesTimer = CurTime()
+      self.Lines = {}
+      self.LinesTimer = CurTime()-10
+    end
+
+    self.Matrix = Matrix()
   end
 
   local MainFrame = surface.GetTextureID("glebqip/active screen 1/mainframe")
   local EnterCode = surface.GetTextureID("glebqip/active screen 1/sd_entercode")
 
-  local IDCLeft = surface.GetTextureID("glebqip/idc screen 1/main_left")
-  local IDCRight = surface.GetTextureID("glebqip/idc screen 1/main_right")
-  local GateFrame = surface.GetTextureID("glebqip/idc screen 1/gate_frame")
+  local IDCLeft = surface.GetTextureID("glebqip/data screen 1/main_left")
+  local IDCRight = surface.GetTextureID("glebqip/data screen 1/main_right")
+  local GateFrame = surface.GetTextureID("glebqip/data screen 1/gate_frame")
 
-  local Gate = surface.GetTextureID("glebqip/idc screen 1/gate_back")
+  local Gate = surface.GetTextureID("glebqip/data screen 1/gate_back")
   local Ring = surface.GetTextureID("glebqip/dial screen 1/Ring")
   local RingArcs = surface.GetTextureID("glebqip/dial screen 1/RingArcs")
   local Chevron = surface.GetTextureID("glebqip/dial screen 1/Chevron")
   local Chevron7 = surface.GetTextureID("glebqip/dial screen 1/Chevron7")
   local ChevronBox = surface.GetTextureID("glebqip/dial screen 1/ChevronBox")
 
-  local OpenRed = surface.GetTextureID("glebqip/idc screen 1/OpenRed")
+  local OpenRed = surface.GetTextureID("glebqip/data screen 1/OpenRed")
 
   local BWCircle = surface.GetTextureID("glebqip/active screen 1/circle")
 
@@ -355,7 +359,7 @@ else
       surface.DrawTexturedRectRotated(0+X2,0+Y2,12,12,ang+180)
     end
     if self:GetServerBool("SelfDestruct",false) and anim > 2 then
-      local time = math.abs(self:GetServerInt("SDTimer",CurTime())-CurTime())
+      local time = math.abs(self:GetServerInt("SDTimer"))
       local str1 = string.format("%02d", math.floor(time/60))
       local str2 = string.format(".%02d",math.floor(time%60))
       draw.SimpleText(str1, "Marlett_45", 0-2,0, Color(255,255,255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
@@ -392,7 +396,7 @@ else
         end
         table.insert(self.Digits1,1,str)
       else
-        table.insert(self.Digits1,1,nil)
+        table.insert(self.Digits1,1,false)
       end
       table.remove(self.Digits1,10)
       self.Digits1Timer = CurTime()

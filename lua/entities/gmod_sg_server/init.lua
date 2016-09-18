@@ -34,6 +34,7 @@ function ENT:Initialize()
   self.SelfDestructClients = {}
   self.SelfDestruct = false
   self.SelfDestructTimer = CurTime()
+  self.Iris = false
 end
 
 function ENT:SpawnFunction(ply, tr)
@@ -90,15 +91,13 @@ function ENT:Think()
     end
     if time > 11 and self.State == 4 then
       self.State = 5
-      --self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55)
     end
     if time > 15 and self.State == 5 then
       self.State = 6
-      --self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55)
     end
     if time > 17 and self.State == 6 then
       self.State = -1
-      --self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55)
+      self.Iris = false
     end
   end
   self:SetNW2Int("LoadState",self.State)
@@ -115,14 +114,19 @@ function ENT:Think()
       end
     end
     if enter == 2 and not self.SelfDestruct then
+      if IsValid(self.Bomb) then
+        self.Bomb.chargeTime = 120+3
+        self.Bomb:StartDetonation(self.Bomb.detonationCode)
+      end
       self.SelfDestruct = true
       self.SelfDestructTimer = CurTime()+120+3
     elseif enter == 2 and self.SelfDestruct then
+      if IsValid(self.Bomb) then self.Bomb:AbortDetonation(self.Bomb.abortCode) end
       self.SelfDestruct = false
       self.SelfDestructTimer = CurTime()
     end
     self:SetNW2Bool("SelfDestruct",self.SelfDestruct)
-    self:SetNW2Int("SDTimer",self.SelfDestructTimer)
+    self:SetNW2Int("SDTimer",self.Bomb:GetNWInt("BombOverlayTime",0))
     if math.random() > 0.99 then
       self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55,100,0.3)
     end
@@ -229,7 +233,7 @@ function ENT:Think()
         elseif dialdsymb ~= "" and not open and not gate.DialType.Fast then
           smadd = dialdsymb
         elseif self.LastDialSymb ~= self.DialingAddress[#self.DialingAddress] then
-          smadd = self.LastDialSymb
+          smadd = self.LastDialSymb or ""
         end
         self.DialingAddress = self.DialingAddress..smadd
       end
@@ -247,8 +251,73 @@ function ENT:Think()
     end
     self:SetNW2String("DialingAddress",self.DialingAddress)
     self:SetNW2String("DialingAddressDelta",dadddelta)
-
+    if self.Inbound ~= inbound then
+        self.Iris = inbound
+        self.Inbound = inbound
+      end
+    --GDO scripts
+    if inbound and IsValid(self.IDCReceiver) and self.IDCReceiver.LockedGate ~= self.IDCReceiver.Entity then
+      local code = self.IDCReceiver.wireCode
+      if self.IDCCode == 0 and code ~= self.IDCCode then
+        self.IDCCode = code
+        self.IDCReceivedCode = code ~= 0 and tostring(code) or self.IDCReceivedCode
+        if code ~= 0 then
+          self.IDCState = 1
+          self.IDCTimer = CurTime()
+          local desc = self.IDCReceiver.wireDesc
+          if not self.IDCReceiver.Codes[code] then
+            self.IDCCodeState = 2
+          elseif desc[1] == "!" then
+            self.IDCCodeState = 1
+            self.IDCName = desc:sub(2,-1)
+          else
+            self.IDCCodeState = 0
+            self.IDCName = desc
+          end
+        end
+      end
+      if self.IDCState == 1 and CurTime()-self.IDCTimer > 0.8 then
+        self.IDCState = 2
+        self.IDCTimer = CurTime()
+      end
+      if self.IDCState == 2 and CurTime()-self.IDCTimer > 2.2 then
+        self.IDCState = 3
+        self.IDCShowState = 0
+        self.IDCTimer = CurTime()
+        self.LinesTimer = CurTime()-0.1
+      end
+      if self.IDCState == 3 and CurTime()-self.IDCTimer > #self.IDCReceivedCode*0.1+0.1 then
+        self.IDCState = 4
+        self.IDCReceiver.GDOStatus = -1
+        if self.IDCCodeState == 0 then
+          self.IDCReceiver.GDOText = "ACCEPT"
+        elseif self.IDCCodeState == 1 then
+          self.IDCReceiver.GDOText = "EXPIRED"
+        else
+          self.IDCReceiver.GDOText = "UNKNOWN"
+        end
+        print(1)
+        self.Iris = self.Iris and self.IDCCodeState ~= 0
+      end
+    else
+      self.IDCState = 0
+      if IsValid(self.IDCReceiver) then
+        self.IDCReceiver.GDOStatus = 2
+        self.IDCReceiver.GDOText = "CODE CHECK"
+      end
+      self.IDCCode = 0
+    end
+    self:SetNW2Int("IDCShowState",self.IDCShowState)
+    self:SetNW2Int("IDCState",self.IDCState)
+    self:SetNW2String("IDCCode",self.IDCReceivedCode)
+    self:SetNW2String("IDCName",self.IDCName)
+    self:SetNW2Int("IDCCodeState",self.IDCCodeState)
     --self:SetNWString("SGAddress", gate:GetWire("Dialing Address", "", true))
+  else
+    self.Iris = true
+  end
+  if IsValid(self.IDCReceiver) and IsValid(self.IDCReceiver.LockedIris) and self.IDCReceiver.LockedIris.IsActivated ~= self.Iris then
+    self.IDCReceiver.LockedIris:Toggle()
   end
   self:SetNW2Bool("Connected", IsValid(gate))
   self:NextThink(CurTime()+0.075)
@@ -269,11 +338,17 @@ end
 function ENT:Touch(ent)
   if not IsValid(self.LockedGate) and (ent.IsGroupStargate) then
     self.LockedGate = ent
+    self.LockedGate:TriggerInput("SGC Type",1)
     local ed = EffectData()
     ed:SetEntity(self)
     util.Effect("propspawn", ed, true, true)
   elseif not IsValid(self.IDCReceiver) and (ent.GDOStatus) then
     self.IDCReceiver = ent
+    local ed = EffectData()
+    ed:SetEntity(self)
+    util.Effect("propspawn", ed, true, true)
+  elseif not IsValid(self.Bomb) and ent:GetClass() == "naquadah_bomb" then
+    self.Bomb = ent
     local ed = EffectData()
     ed:SetEntity(self)
     util.Effect("propspawn", ed, true, true)

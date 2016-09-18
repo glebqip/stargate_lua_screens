@@ -61,7 +61,7 @@ else
       local y3 = (y1 + y2) / 2
       local wx = math.sqrt((x2-x1) ^ 2 + (y2-y1) ^ 2)
       local angle = math.deg(math.atan2(y1-y2, x2-x1))
-      --render.SetTexture()
+      surface.SetTexture(0)
       surface.DrawTexturedRectRotated(x3, y3, wx, (sz or 1), angle)
     end
   end
@@ -214,7 +214,7 @@ else
             end
             table.insert(self.Digits1,1,str)
         else
-            table.insert(self.Digits1,1,nil)
+            table.insert(self.Digits1,1,false)
         end
         table.remove(self.Digits1,33)
         self.Digits1Timer = CurTime()
