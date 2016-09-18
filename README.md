@@ -7,6 +7,11 @@ This is the lua version Stargate dialing computer pack from first 2 seasons
 
 This screens in dev now:
 * Dialing screen
-* IDC screen from season 1
+* Gate data screen from season 1
+* Gate active screen
+* Gate integrity screen(IDC)
+* Energy flux screen from film
+* Energy output screen from film
+* Energy output screen from series
 
 This screens is finished:
