@@ -27,6 +27,8 @@ function ENT:Initialize()
 
   self.MenuChoosed = 0
   self.MenuScrool = 0
+
+  self.OldTime = CurTime()
 end
 
 function ENT:SpawnFunction(ply, tr)
@@ -90,8 +92,10 @@ function ENT:Think()
     end
   end
   for k,v in pairs(self.Screens) do
-    v:Think(self.Screen == k)
+    v:Think(self.Screen == k,self.DeltaTime)
   end
+  self.DeltaTime = CurTime()-self.OldTime
+  self.OldTime = CurTime()
   self:NextThink(CurTime()+0.05)
   return true
 end
@@ -100,6 +104,7 @@ function ENT:Trigger(key, value)
   if key == 13 and value and self.MenuChoosed > 0 then
     self.Screen = self.MenuChoosed
     self.MenuChoosed = 0
+    return
   end
   if key == 158 and value then
     if self.MenuChoosed > 0 then

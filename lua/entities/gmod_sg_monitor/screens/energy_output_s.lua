@@ -27,6 +27,8 @@ else
 
     self.String1 = "4572 FGO895"
     self.FileIter = 0
+
+    self.Max = math.Rand(0.05,1)
   end
 
   local MainFrame = surface.GetTextureID("glebqip/energy output s/mainframe")
@@ -116,30 +118,36 @@ else
     draw.SimpleText("locked in", "Marlett_15", 13, 320, Color(141,150,110), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     draw.SimpleText("magnatomic flux", "Marlett_15", 13, 335, Color(141,150,110), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     surface.SetDrawColor(Color(45,150,60))
-    if #self.Lines > 0 then
-      draw.DrawTLine(183+Lerp(st*17,0,20),202,183+Lerp(en*17,0,20),202,2)
-      draw.DrawTLine(475+Lerp((st-(1-1/17))*17,0,20),202,475+Lerp((en-(1-1/17))*17,0,21),202,2)
-      --surface.DrawLine(126+310+29*st,193,126+347,193)
-      local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
-      if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
-      if anim > 2 then
-        anim = anim-2
-        st = math.max(anim+anim*40/305-20/305,0)
+    draw.DrawTLine(183+Lerp(st*17,0,20),202,183+Lerp(en*17,0,20),202,2)
+    draw.DrawTLine(475+Lerp((st-(1-1/17))*17,0,20),202,475+Lerp((en-(1-1/17))*17,0,21),202,2)
+    --surface.DrawLine(126+310+29*st,193,126+347,193)
+    local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
+    if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
+    if anim > 2 then
+      anim = anim-2
+      st = math.max(anim+anim*40/305-20/305,0)
+    end
+    local ie = math.ceil(50*en)
+    if ie ~= self.EndLine and ie > 1 then
+      if self.Active then
+        local power = (open and 1 or 0.7) + (double and 0.25 or 0)
+        if math.random() > 0.7 then
+          self.Max = math.Rand(0.05,1)
+        end
+        local maxval = self.Max*power*98*(ie%2 == 0 and -1 or 1)
+        self.Lines[ie] = math.Rand(maxval/4,maxval)
+      elseif self.Lines[ie] then
+        self.Lines[ie] = nil
       end
-      for i=math.ceil(#self.Lines*st),(#self.Lines)*en do
-        local x1 = math.floor(269/#self.Lines*i)
-        local x2 = math.floor(269/#self.Lines*(i+1));
-        local y1 = self.Lines[i] or 0
-        local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
-        --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
-        draw.DrawTLine(203+x1,202+y1,203+x2,202+y2,2)
-      end
-    else
-      if st > 0 then
-        draw.DrawTLine(183+Lerp(st,0,313),202,497,202,2)
-      else
-        draw.DrawTLine(183,202,183+Lerp(en,0,313),202,2)
-      end
+      self.EndLine = ie
+    end
+    for i=math.ceil(50*st),(50)*en do
+      local x1 = math.floor(269/50*i)
+      local x2 = math.floor(269/50*(i+1));
+      local y1 = self.Lines[i] or 0
+      local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
+      --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
+      draw.DrawTLine(203+x1,202+y1,203+x2,202+y2,2)
     end
   end
 
@@ -155,19 +163,8 @@ else
     if CurTime()-self.LinesTimer > 3 then
       if self.Active then
         self:EmitSound("glebqip/energy_big.wav",65,100,0.55)
-        local power = (open and 1 or 0.7) + (double and 0.25 or 0)
-        local max = math.Rand(0.05,1)
-        for i=1,50 do
-          if math.random() > 0.7 then
-            max = math.Rand(0.05,1)
-          end
-          local maxval = max*power*98*(i%2 == 0 and -1 or 1)
-          self.Lines[i] = math.Rand(maxval/4,maxval)
-        end
       elseif not self.Active and #self.Lines > 0 then
         self.Lines = {}
-        self.Lines2 = {}
-        self.Lines3 = {}
       end
       for i=1,20 do
         local maxval = 28

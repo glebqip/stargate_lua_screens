@@ -2,7 +2,11 @@ include("shared.lua")
 include("cl_gpudraw_lite.lua")
 
 surface.CreateFont("SGC_SG1", {font="Stargate Address Glyphs Concept", size=35, weight=400, antialias=true, additive=false})
+surface.CreateFont("SGC_ABS", {font="Stargate Address Glyphs Concept", size=19, weight=400, antialias=true, additive=false})
+surface.CreateFont("SGC_ABS1", {font="Stargate Address Glyphs Concept", size=15, weight=400, antialias=true, additive=false})
+
 surface.CreateFont("SGC_Symb", {font="Stargate Address Glyphs Concept", size=90, weight=400, antialias=true, additive=false, })
+surface.CreateFont("Marlett_9", {font="Marlett", size=9, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_10", {font="Marlett", size=10, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_11", {font="Marlett", size=11, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_12", {font="Marlett", size=12, weight=800, antialias=true, additive=false, })
@@ -191,7 +195,7 @@ function ENT:Screen()
     if menu > 0 then
       surface.SetDrawColor(0,0,0)
       surface.DrawRect(292,168,9,79)
-      surface.SetDrawColor(127,228,223)
+      surface.SetDrawColor(self.MainColor)
       local maxscrool = math.max(0,(#self.Screens-8))
       local scroolsize = math.floor(75/(maxscrool+1))
       surface.DrawRect(293,171+(75-scroolsize)/maxscrool*scrool,7,scroolsize)
@@ -199,10 +203,10 @@ function ENT:Screen()
       surface.SetTexture(Select)
       surface.DrawTexturedRectRotated(256,192,256,256,0)
 
-      surface.SetDrawColor(229,242,217)
+      surface.SetDrawColor(self.SecondColor)
       surface.DrawRect(156,149+(menu-scrool)*12,132,11)
       for i=1+scrool,math.min(8+scrool,#self.Screens) do
-        draw.SimpleText(self.Screens[i].Name, "Marlett_15", 157,154+(i-scrool)*12, menu == i and Color(0,0,0) or Color(229,242,217), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        draw.SimpleText(self.Screens[i].Name, "Marlett_15", 157,154+(i-scrool)*12, menu == i and Color(0,0,0) or self.SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
       end
     end
   elseif self.Server:GetNW2Bool("On",false) then

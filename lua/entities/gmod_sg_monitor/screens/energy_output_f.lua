@@ -25,6 +25,7 @@ else
     self.Lines = {}
     self.LinesTimer = CurTime()-3
     self.Active = false
+    self.Max = math.Rand(0.05,1)
   end
 
   local MainFrame = surface.GetTextureID("glebqip/energy output f/mainframe")
@@ -49,26 +50,36 @@ else
     if anim > 2 then st = anim-2 end
     if anim < 1 then en = anim end
     surface.SetDrawColor(Color(45,150,60))
-    if #self.Lines > 0 then
-      draw.DrawTLine(126+Lerp(st*17,0,20),193,126+Lerp(en*17,0,20),193,2)
-      draw.DrawTLine(452+Lerp((st-(1-1/17))*17,0,20),193,452+Lerp((en-(1-1/17))*17,0,21),193,2)
-      --surface.DrawLine(126+310+29*st,193,126+347,193)
-      local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
-      if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
-      if anim > 2 then
-        anim = anim-2
-        st = math.max(anim+anim*40/305-20/305,0)
+    draw.DrawTLine(126+Lerp(st*17,0,20),193,126+Lerp(en*17,0,20),193,2)
+    draw.DrawTLine(452+Lerp((st-(1-1/17))*17,0,20),193,452+Lerp((en-(1-1/17))*17,0,21),193,2)
+    --surface.DrawLine(126+310+29*st,193,126+347,193)
+    local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
+    if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
+    if anim > 2 then
+      anim = anim-2
+      st = math.max(anim+anim*40/305-20/305,0)
+    end
+    local ie = math.ceil(50*en)
+    if ie ~= self.EndLine and ie > 1 then
+      if self.Active then
+        local power = (open and 1 or 0.7) + (double and 0.25 or 0)
+        if math.random() > 0.7 then
+          self.Max = math.Rand(0.05,1)
+        end
+        local maxval = self.Max*power*120*(ie%2 == 0 and -1 or 1)
+        self.Lines[ie] = math.Rand(maxval/4,maxval)
+      elseif self.Lines[ie] then
+        self.Lines[ie] = nil
       end
-      for i=math.ceil(#self.Lines*st),(#self.Lines)*en do
-        local x1 = math.floor(301/#self.Lines*i)
-        local x2 = math.floor(301/#self.Lines*(i+1));
-        local y1 = self.Lines[i] or 0
-        local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
-        --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
-        draw.DrawTLine(146+x1,193+y1,146+x2,193+y2,2)
-      end
-    else
-      draw.DrawTLine(126+Lerp(st,0,347),193,126+Lerp(en,0,347),193,2)
+      self.EndLine = ie
+    end
+    for i=math.ceil(50*st),(50)*en do
+      local x1 = math.floor(301/50*i)
+      local x2 = math.floor(301/50*(i+1));
+      local y1 = self.Lines[i] or 0
+      local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
+      --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
+      draw.DrawTLine(146+x1,193+y1,146+x2,193+y2,2)
     end
   end
 
@@ -98,15 +109,6 @@ else
     end
     if CurTime()-self.LinesTimer > 3 then
       if self.Active then
-        local power = (open and 120 or 80) + (double and 25 or 0)
-        local max = math.Rand(0.2,1)
-        for i=1,50 do
-          if math.random() > 0.7 then
-            max = math.Rand(0.05,1)
-          end
-          local maxval = max*power*(i%2 == 0 and -1 or 1)
-          self.Lines[i] = math.Rand(maxval/2,maxval)
-        end
       elseif not self.Active and #self.Lines > 0 then
         self.Lines = {}
       end

@@ -18,6 +18,9 @@ function ENT:Initialize()
   self.DCError = 0
   self.On = false
 
+  self.AddressCheck = CurTime()-7
+  self.Addresses = {}
+
   self.OnSound = CreateSound(self,"glebqip/computer_loop.wav")
   self.OnSound:SetSoundLevel(55)
   self.StartTimer = false
@@ -103,6 +106,18 @@ function ENT:Think()
   self:SetNW2Int("LoadState",self.State)
   local gate = self.LockedGate
   if (IsValid(gate)) and self.On and self.State == -1 then
+    if CurTime()-self.AddressCheck > 10 then
+      self.Addresses = gate:WireGetAddresses()
+      self.AddressCheck = CurTime()
+      self:SetNW2Int("AddressCount",#self.Addresses)
+      for i=1,#self.Addresses do
+        self:SetNW2String("Address"..i,self.Addresses[i][1])
+        self:SetNW2String("AddressName"..i,self.Addresses[i][2]:sub(1,15))
+        self:SetNW2Int("AddressBlocked"..i,self.Addresses[i][3] > 0)
+        self:SetNW2Int("AddressCRC"..i,util.CRC(self.Addresses[i][1]))
+      end
+    end
+
     local enter = 0
     for ent in pairs(self.SelfDestructClients) do
       if not IsValid(ent) or ent.Server ~= self or ent:GetNW2Int("SDState",0) == 0 and not self.SelfDestruct or ent:GetNW2Int("SDRState",0) == 0 and self.SelfDestruct then
@@ -126,7 +141,7 @@ function ENT:Think()
       self.SelfDestructTimer = CurTime()
     end
     self:SetNW2Bool("SelfDestruct",self.SelfDestruct)
-    self:SetNW2Int("SDTimer",self.Bomb:GetNWInt("BombOverlayTime",0))
+    self:SetNW2Int("SDTimer",IsValid(self.Bomb) and self.Bomb:GetNWInt("BombOverlayTime",0) or 0)
     if math.random() > 0.99 then
       self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55,100,0.3)
     end
@@ -296,7 +311,6 @@ function ENT:Think()
         else
           self.IDCReceiver.GDOText = "UNKNOWN"
         end
-        print(1)
         self.Iris = self.Iris and self.IDCCodeState ~= 0
       end
     else
