@@ -12,27 +12,48 @@ local SCR = {
 if SERVER then
   function SCR:Initialize()
     self.Selected = 0
-    self.Scrool = 0
-    self.Scrooling = false
+    self.Scroll = 0
+    self.OldScroll = 0
+    self.Scrolling = false
   end
 
   function SCR:Think(curr,dT)
-    if self.Scrooling then
-      self.Scrool = math.Clamp(self.Scrool + dT*4*self.Scrooling,0,self:GetServerInt("AddressCount")+1)
-      self:SetMonitorFloat("ABScrool",self.Scrool)
+    if not curr then return end
+    local count = self:GetServerBool("Connected",false) and self:GetServerInt("AddressCount",0) or 0
+    if self.Scrolling then
+      self.Scroll = math.Clamp(self.Scroll + dT*4*self.Scrolling,0,count-1)
+      self:SetMonitorFloat("ABScroll",self.Scroll)
+    elseif count == 0 and (self.Scroll ~= 0 or self.Selected ~= 0) then
+      self.Scrolling = 0
+      self.Selected = 0
     end
-    if self.Selected < math.floor(self.Scrool) and math.floor(self.Scrool) < self:GetServerInt("AddressCount") then
-      self.Selected = math.floor(self.Scrool)
+    if self.Selected < math.floor(self.Scroll) and math.floor(self.Scroll) < count then
+      self.Selected = math.floor(self.Scroll)
     end
-    local max = math.floor(self.Scrool) ~= self.Scrool and 7 or 6
-    if self.Selected > math.floor(self.Scrool)+max then
-      self.Selected = math.floor(self.Scrool)+max
+    local max = math.floor(self.Scroll) ~= self.Scroll and 7 or 6
+    if self.Selected > math.floor(self.Scroll)+max then
+      self.Selected = math.floor(self.Scroll)+max
     end
+    if self.Selected > count-1 then
+      self.Selected = count-1
+    end
+    if self.Scroll > count and count < self.Count then
+      local min = self.Count-self.Scroll
+      self.Scroll = count-min
+      self:SetMonitorFloat("ABScroll",self.Scroll)
+    end
+    self.Count = count
     self:SetMonitorInt("ABSelected",self.Selected)
+    self:SetMonitorBool("ABScrolling", self.OldScroll ~= self.Scroll)
+    self.OldScroll = self.Scroll
     --
   end
   function SCR:Trigger(curr,key,value)
     if not curr then return end
+    local count = self:GetServerBool("Connected",false) and self:GetServerInt("AddressCount",0) or 0
+    if count == 0 then
+      return
+    end
     if self:GetMonitorBool("ServerConnected",false) then
        -- \, iris toggle
       if key == 92 and value then self.Entity.Server.Iris = not self.Entity.Server.Iris end
@@ -41,17 +62,14 @@ if SERVER then
     end
     if key == 13 and value then
       self.Entity.Screens[1].EnteredAddress = self:GetServerString("Address"..(self:GetMonitorInt("ABSelected",0)+1),"")
-      if #self.Entity.Screens[1].EnteredAddress < 9 then
-        self.Entity.Screens[1].EnteredAddress = self.Entity.Screens[1].EnteredAddress.."#"
-      end
       self.Entity.Screen = 1
     end
-    if key == 17 and value then self.Selected = math.Clamp(self.Selected-1,0,self:GetServerInt("AddressCount")-1) end
-    if key == 18 and value then self.Selected = math.Clamp(self.Selected+1,0,self:GetServerInt("AddressCount")-1) end
-    if key == 151 and value then self.Scrooling = 1 end
-    if key == 151 and not value then self.Scrooling = false end
-    if key == 152 and value then self.Scrooling = -1 end
-    if key == 152 and not value then self.Scrooling = false end
+    if key == 17 and value then self.Selected = math.Clamp(self.Selected-1,0,count-1) end
+    if key == 18 and value then self.Selected = math.Clamp(self.Selected+1,0,count-1) end
+    if key == 151 and value then self.Scrolling = 1 end
+    if key == 151 and not value then self.Scrolling = false end
+    if key == 152 and value then self.Scrolling = -1 end
+    if key == 152 and not value then self.Scrolling = false end
 
   end
 else
@@ -67,47 +85,50 @@ else
 
   local Red = Color(239,0,0)
 
+  local gates ={"STD","MOV","INF","ATL","TOL","UNI"}
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
-    local scr = self:GetMonitorFloat("ABScrool",0)%1
-    local scrg = math.floor(self:GetMonitorFloat("ABScrool",0))
+    local count = self:GetServerBool("Connected",false) and self:GetServerInt("AddressCount",0) or 0
+    local scr = self:GetMonitorFloat("ABScroll",0)%1
+    local scrg = math.floor(self:GetMonitorFloat("ABScroll",0))
     local add = scrg-self:GetMonitorInt("ABSelected",0)
-    for i=0,math.min(7,self:GetServerInt("AddressCount",0)-scrg-1) do
-      surface.SetFont("Marlett_15")
-      local text = self:GetServerString("AddressName"..(i+scrg+1),"")
-      if surface.GetTextSize(text) > 88 then
-        for i=8,15 do
-          if surface.GetTextSize(text:sub(1,i).."...") > 88 then
-            text = text:sub(1,i-1).."..."
-            break
-          end
-        end
-      end
+    for i=0,math.min(7,count-scrg-1) do
+      local id = (i+scrg+1)
+      local text = self.TextEllipsis(self:GetServerString("AddressName"..id,""),90,"Marlett_15")
       draw.SimpleText(text, "Marlett_15", 19, 65+(i-scr)*35, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-      local min = #self:GetServerString("Address"..(i+scrg+1),"")-6
-      local addr = self:GetServerString("Address"..(i+scrg+1),"")
+      local min = #self:GetServerString("Address"..id,"")-6
+      local addr = self:GetServerString("Address"..id,"")
       for i1=1,#addr do
         draw.SimpleText(addr[i1], "SGC_ABS1", 293+(i1-1-min)*21, 79+(i-scr)*35, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
       end
-      if min >= 2 then
+      if min > 2 then
         surface.SetTexture(Address9)
-      elseif min == 1 then
+      elseif min == 2 then
         surface.SetTexture(Address8)
       else
         surface.SetTexture(Address7)
       end
-      draw.SimpleText(Format("0x%08X",self:GetServerString("AddressCRC"..(i+scrg+1),"")), "Marlett_9", 421, 65+(i-scr)*35, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-      if self:GetServerBool("AddressBlocked"..(i+scrg+1),false) then
+      draw.SimpleText(Format("0x%08X",self:GetServerInt("AddressCRC"..id,"")/2), "Marlett_10", 421, 65+(i-scr)*35, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      if self:GetServerBool("AddressBlocked"..id,false) then
         draw.SimpleText("BLOCKED!", "Marlett_12", 19, 80+(i-scr)*35, Red, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         surface.SetDrawColor(Red)
       else
         surface.SetDrawColor(MainColor)
       end
       surface.DrawTexturedRectRotated(212,73+(i-scr)*35,512,32,0)
+
+      draw.SimpleText("Dist:", "Marlett_12", 113, 63+(i-scr)*35, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText("Group:", "Marlett_12", 113, 72+(i-scr)*35, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText("Type:", "Marlett_12", 113, 81+(i-scr)*35, Color(255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText(Format("%.02f kU",self:GetServerInt("AddressDistance"..id,0)/1000), "Marlett_12", 147, 63+(i-scr)*35, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText(self:GetServerString("AddressGalaxy"..id,""), "Marlett_12", 147, 72+(i-scr)*35, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      draw.SimpleText(gates[self:GetServerInt("AddressType"..id,1)], "Marlett_12", 147, 81+(i-scr)*35, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     end
-    if self:GetServerBool("AddressBlocked"..(self:GetMonitorInt("ABSelected",0)+1),false) then
-      surface.SetDrawColor(SecondColor)
-    else
-      surface.SetDrawColor(Red)
+    if count > 0 then
+      if self:GetServerBool("AddressBlocked"..(self:GetMonitorInt("ABSelected",0)+1),false) then
+        surface.SetDrawColor(SecondColor)
+      else
+        surface.SetDrawColor(Red)
+      end
     end
     draw.OutlinedBox(14, 57+(0-scr-add)*35,396,32,1)
     for i=1,#self.Symbols do

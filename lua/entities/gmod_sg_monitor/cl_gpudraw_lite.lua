@@ -1,21 +1,8 @@
 --Lite lib from Wiremod GPU
---Mijyuoon's PNG2RT
-local mat_pngrt = CreateMaterial("PngRT", "UnlitGeneric", {
-	["$basetexture"] = "", ["$ignorez"] = 1, ["$model"] = 1,
-	["$vertexcolor"] = 1, ["$vertexalpha"] = 1,
-})
-local function PngToRT(tex)
-	mat_pngrt:SetTexture("$basetexture", tex:GetTexture("$basetexture"))
-	return mat_pngrt
-end
-function draw.SetPNGMaterial(mat)
-	 surface.SetMaterial(PngToRT(mat))
- end
 
-local matScreen = CreateMaterial("SGCRT","UnlitGeneric",{
+local matScreen = CreateMaterial("4:3DialCompRT","UnlitGeneric",{
 	["$vertexcolor"] = 1,
 	["$vertexalpha"] = 1,
-	["$ignorez"] = 1,
 	["$nolod"] = 1,
 })
 
@@ -25,8 +12,8 @@ function ENT:ScreenInit(x,y,pos,ang,scale)
   self.SPos = pos
   self.SAng = ang
   self.SScale = scale
-  self.RT = GetRenderTarget("SGC_COMPUTER", self.XRes, self.YRes)
-	matScreen:SetTexture("$basetexture", self.RT)
+  --self.RT = GetRenderTarget("SGC_Mon"..math.random(1,1000), self.XRes, self.YRes)
+	--matScreen:SetTexture("$basetexture", self.RT)
 end
 function ENT:ScreenChange(pos,ang,scale)
   self.SPos = self:LocalToWorld(pos)
@@ -38,19 +25,19 @@ function ENT:DrawScreen(x,y,w,h,s)
   if not self.Screen then return end
 	local oldw,oldh = ScrW(),ScrH()
 	local OldRT = render.GetRenderTarget()
+	matScreen:SetTexture("$basetexture", self.RT)
 
 	render.SetRenderTarget(self.RT)
-  render.SetViewPort(0, 0, self.XRes, self.YRes)
-  cam.Start2D()
-		surface.SetDrawColor(0,0,0,255)
-		surface.DrawRect(x,y,w,h)
-    local succ,err = pcall(self.Screen,self)
-    if not succ then
-      surface.SetAlphaMultiplier(1)
-      ErrorNoHalt(err.."\n")
-    end
-    cam.End2D()
-  render.SetViewPort(0, 0, oldw, oldh)
+	  render.SetViewPort(0, 0, self.XRes, self.YRes)
+			render.Clear( 0, 0, 0, 0 )
+		  cam.Start2D()
+		    local succ,err = pcall(self.Screen,self)
+		    if not succ then
+		      surface.SetAlphaMultiplier(1)
+		      ErrorNoHalt(err.."\n")
+		    end
+	    cam.End2D()
+	  render.SetViewPort(0, 0, oldw, oldh)
 	render.SetRenderTarget(OldRT)
 
 	cam.Start3D2D(self:LocalToWorld(self.SPos), self:LocalToWorldAngles(self.SAng), self.SScale)
@@ -60,5 +47,4 @@ function ENT:DrawScreen(x,y,w,h,s)
 		surface.SetMaterial(matScreen)
 		surface.DrawTexturedRectRotated(self.XRes/2,self.YRes/2,self.XRes*s,self.YRes*s,0)
 	cam.End3D2D()
-	--WireGPU_matScreen:SetTexture("$basetexture", OldTex)
 end

@@ -27,6 +27,10 @@ function ENT:RegisterScreenFunctions(screen)
     if not IsValid(screen.Entity.Server) then return default end
     return screen.Entity.Server:GetNW2Int(id, default)
   end
+  screen.GetServerFloat = function(_,id, default)
+    if not IsValid(screen.Entity.Server) then return default end
+    return screen.Entity.Server:GetNW2Float(id, default)
+  end
   screen.GetServerString = function(_,id, default)
     if not IsValid(screen.Entity.Server) then return default end
     return screen.Entity.Server:GetNW2String(id, default)
@@ -38,6 +42,24 @@ function ENT:RegisterScreenFunctions(screen)
     screen.SetMonitorInt = function(_, id, val) return screen.Entity:SetNW2Int(id, val) end
     screen.SetMonitorFloat = function(_, id, val) return screen.Entity:SetNW2Float(id, val) end
     screen.SetMonitorString = function(_, id, val) return screen.Entity:SetNW2String(id, val) end
+  else
+    function screen.TextEllipsis(str, maxw, font, ellipsis) //by Mijyuoon
+      surface.SetFont(font)
+      ellipsis = ellipsis or "..."
+      local fullw, _ = surface.GetTextSize(str)
+      if fullw <= maxw then return str end
+      local waccum, etxt = 0, ellipsis
+      local dotw, _ = surface.GetTextSize(etxt)
+      for j, ci in utf8.codes(str) do
+          local ch = utf8.char(ci)
+          local chw = surface.GetTextSize(ch)
+          waccum = waccum + chw
+          if waccum + dotw > maxw then
+              local newstr = str:sub(1, j-1)
+              return newstr .. ellipsis
+          end
+      end
+    end
   end
 end
 

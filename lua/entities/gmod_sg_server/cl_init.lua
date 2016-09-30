@@ -17,3 +17,25 @@ function ENT:Draw()
   end
   return true
 end
+
+function ENT:Initialize()
+  self.OnSound = CreateSound(self,"glebqip/computer_loop.wav")
+  self.OnSound:SetSoundLevel(55)
+end
+
+function ENT:Think()
+  if self.On then
+    self.OnSound:PlayEx(0.6,100)
+  end
+  if self.On ~= self:GetNW2Bool("On",false) then
+    if self.On then
+      self.OnSound:Stop()
+      self:EmitSound("glebqip/computer_end.wav",55)
+    end
+      self.On = self:GetNW2Bool("On",false)
+  end
+end
+function ENT:OnRemove()
+  self.OnSound:Stop()
+  self:EmitSound("glebqip/computer_end.wav",55)
+end

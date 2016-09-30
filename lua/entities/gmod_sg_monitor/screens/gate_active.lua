@@ -177,6 +177,7 @@ else
       self.Lines = {}
       self.LinesTimer = CurTime()-10
     end
+    self.Open = self:GetServerBool("Open",false)
 
     self.Matrix = Matrix()
   end

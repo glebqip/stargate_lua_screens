@@ -241,6 +241,7 @@ else
         self.LinesTimer = CurTime()+0.15
       end
       if self.State == 3 then
+        self:EmitSound("glebqip/idc_numb_start.wav",65,100,0.3)
         self.AnalyzingCode = string.Explode("",self:GetServerString("IDCCode",""))
         self.AnalyzedCode = {}
         self.LinesTimer = CurTime()-0.1

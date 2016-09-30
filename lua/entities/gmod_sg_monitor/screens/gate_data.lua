@@ -25,10 +25,20 @@ else
 
     self.Digits1 = {}
     self.Digits1Timer = CurTime()-1
+    if self:GetServerBool("Connected",false) and self:GetServerBool("Active",false) then
+      for i=1,32 do
+        str = ""
+        for _=1,25 do
+            str = str..tostring(math.random(0,9))
+        end
+        table.insert(self.Digits1,1,str)
+      end
+    end
     self.Digits2 = {}
     self.Digits2Timer = CurTime()-3
 
     self.IOpenCTimer = CurTime()-1
+    self.Open = self:GetServerBool("Open",false)
   end
 
   local MainLeft = surface.GetTextureID("glebqip/data screen 1/main_left")

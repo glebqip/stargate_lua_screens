@@ -84,8 +84,25 @@ else
     --Random digits
     self.Digits = {}
     self.DigitsTimer = CurTime()-10
+    local connected = self:GetServerBool("Connected",false)
+    local active = self:GetServerBool("Active",false)
+    if connected and active then
+      for i=1,13 do
+        local str = ""
+        local typ = math.random()>0.3
+        for _=math.random(2,4),math.random(6,11) do
+          if typ then
+            str = str..tostring(math.random(0,9))
+          else
+            str = str..tostring(math.random(0,1))
+          end
+        end
+        table.insert(self.Digits,1,str)
+      end
+    end
     --Chevron open animation
     self.OpenCTimer = CurTime()-10
+    self.Open = self:GetServerBool("Open",false)
     --Dial symbol animation
     self.SymbolAnim = nil
     self.SymbolAnim2 = nil
@@ -96,7 +113,7 @@ else
       self.GradientsTimers[i] = CurTime()-self.GradientSpeeds[i]/math.random()
     end
 
-    self.OldDialingAddress = ""
+    self.OldDialingAddress = self:GetServerString("DialingAddress","")
 
     self.Matrix = Matrix()
     self.Dialed = false
@@ -131,10 +148,12 @@ else
     for i=0,8 do
       local state = (CurTime() - self.GradientsTimers[i+1])/self.GradientSpeeds[i+1]
       if state < 1 then
-        local size = math.min(1,state*1.4)*47
+        local size = math.min(1,state*1.4)*45
         local alpha = 1-math.max(0,state*1.4-1)*2.5
         surface.SetDrawColor(MainColor.r,MainColor.g,MainColor.b,alpha*255)
-        surface.DrawTexturedRect(10 + i*17,299 + (47-size),14,size)
+        surface.DrawTexturedRect(10 + i*17,299 + 0,14,47)
+        surface.SetDrawColor(0,0,0,alpha*255)
+        surface.DrawRect(10 + i*17,299,14,45-size)
       end
     end
     surface.SetAlphaMultiplier(1)
@@ -240,7 +259,12 @@ else
     end
 
     if self.EndTimer then
-      local anim = math.abs(math.sin((CurTime()-self.EndTimer)%0.4/0.4*math.pi))*240---EndTimer
+      local anim
+      if self:GetServerBool("IsMovie",false) then
+        anim = (CurTime()-self.EndTimer)%0.6 > 0.3 and 255 or 0
+      else
+        anim = math.abs(math.sin((CurTime()-self.EndTimer)%0.4/0.4*math.pi))*240---EndTimer
+      end
       for i=0,#dialadd-1 do
         surface.SetDrawColor(Color(12,96,104,math.min(255,anim)))
         if NLocal then
@@ -467,7 +491,7 @@ else
       self.Error2Played = true
     end
     if self.Error ~= 0 and self.ErrorTimer and CurTime() - self.ErrorTimer > -0.6 and not self.Error1Played then
-      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,0.8)
+      self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
       self.Error1Played = true
     end
     if (self.Error1Played or self.Error2Played) and self.Error == 0 then
@@ -477,14 +501,20 @@ else
 
     if self:GetServerBool("ChevronFirst", false) and not self.SymbolAnim then
       self.SymbolAnim = CurTime()
-      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,1)
+      if self:GetServerBool("IsMovie",false) then
+        self:EmitSound("glebqip/f_chevron_encode.wav",65,100,1)
+      else
+        self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
+      end
       --self:EmitSound("alexalx/glebqip/dp_locking.wav",65,100,0.8)
     elseif not self:GetServerBool("ChevronFirst", false) and self.SymbolAnim then
       self.SymbolAnim = nil
     end
     if self:GetServerBool("ChevronSecond", false) and not self.SymbolAnim2 then
       self.SymbolAnim2 = CurTime()
-      self:EmitSound("glebqip/dial_chevron_encode.wav",65,100,1)
+      if not self:GetServerBool("IsMovie",false) then
+        self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
+      end
       --self:EmitSound("glebqip/dial_chevron_encode_fr.wav",65,100,0.8)
       --self:EmitSound("alexalx/glebqip/dp_locked.wav",65,100,0.8)
     elseif not self:GetServerBool("ChevronSecond", false) and self.SymbolAnim2 then
@@ -493,14 +523,26 @@ else
 
     if self.OldDialingAddress ~= dialadd then
       if #self.OldDialingAddress < #dialadd and chevron ~= 0 and not inbound then
-        self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
+        if self:GetServerBool("IsMovie",false) then
+          self:EmitSound("glebqip/f_chevron_lock.wav",65,100,1)
+        else
+          self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
+        end
       end
       self.OldDialingAddress = dialadd
     end
-    local endT = self.EndTimer and (CurTime()-self.EndTimer)%0.4 > 0.2
-    if self.OldLocked ~= endT then
-      if endT then self:EmitSound("alexalx/glebqip/dp_lock.wav",65,100,0.8) end
-      self.OldLocked = endT
+    if self:GetServerBool("IsMovie",false) then
+      local endT = self.EndTimer and (CurTime()-self.EndTimer)%0.6 > 0.3
+      if self.OldLocked ~= endT then
+        if endT then self:EmitSound("glebqip/f_complete.wav",65,100,0.8) end
+        self.OldLocked = endT
+      end
+    else
+      local endT = self.EndTimer and (CurTime()-self.EndTimer)%0.4 > 0.2
+      if self.OldLocked ~= endT then
+        if endT then self:EmitSound("alexalx/glebqip/dp_lock.wav",65,100,0.8) end
+        self.OldLocked = endT
+      end
     end
     local LastSecond = active and not open and not inbound and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
     if LastSecond then

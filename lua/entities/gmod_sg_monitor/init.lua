@@ -3,6 +3,7 @@ resource.AddWorkshop("761096308")
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 AddCSLuaFile("cl_gpudraw_lite.lua")
+AddCSLuaFile("rt_mgr.lua")
 for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do AddCSLuaFile("entities/gmod_sg_monitor/screens/"..filename) end
 ENT.ClientVer = 1
 
@@ -26,7 +27,7 @@ function ENT:Initialize()
   self.Keys = {}
 
   self.MenuChoosed = 0
-  self.MenuScrool = 0
+  self.MenuScroll = 0
 
   self.OldTime = CurTime()
 end
@@ -74,7 +75,7 @@ function ENT:Think()
   self:SetNW2Entity("Server",srv)
   self:SetNW2Int("CurrScreen",self.Screen)
   self:SetNW2Int("MenuChoosed",self.MenuChoosed)
-  self:SetNW2Int("MenuScrool",self.MenuScrool)
+  self:SetNW2Int("MenuScroll",self.MenuScroll)
   if self.Inputs.Keyboard.Path then
     local keyb = self.Inputs.Keyboard.Path[1].Entity
     for k,v in pairs(self.Keys) do
@@ -101,7 +102,7 @@ function ENT:Think()
 end
 
 function ENT:Trigger(key, value)
-  if key == 13 and value and self.MenuChoosed > 0 then
+  if key == 13 and value and self.MenuChoosed > 0 and self.Screens[self.MenuChoosed] then
     self.Screen = self.MenuChoosed
     self.MenuChoosed = 0
     return
@@ -111,7 +112,7 @@ function ENT:Trigger(key, value)
       self.MenuChoosed = 0
     else
       self.MenuChoosed = 1
-      self.MenuScrool = 0
+      self.MenuScroll = 0
     end
   end
   if self.MenuChoosed > 0 and key == 18 and value then
@@ -119,13 +120,15 @@ function ENT:Trigger(key, value)
   end
   if self.MenuChoosed > 0 and key == 17 and value then
     self.MenuChoosed = math.max(1,self.MenuChoosed - 1)
+
   end
-  if self.MenuScrool < self.MenuChoosed-8 then
-    self.MenuScrool = self.MenuChoosed-8
+  if self.MenuScroll < self.MenuChoosed-8 then
+    self.MenuScroll = self.MenuChoosed-8
   end
-  if self.MenuScrool > self.MenuChoosed-1 then
-    self.MenuScrool = self.MenuChoosed-1
+  if self.MenuScroll > self.MenuChoosed-1 then
+    self.MenuScroll = self.MenuChoosed-1
   end
+  if self.MenuChoosed ~= 0 then return end
   for k,v in pairs(self.Screens) do
     if v:Trigger(self.Screen == k,key,value) then return end
   end
@@ -150,4 +153,3 @@ function ENT:Touch(ent)
     util.Effect("propspawn", ed, true, true)
   end
 end
-function ENT:UpdateTransmitState() return TRANSMIT_ALWAYS end

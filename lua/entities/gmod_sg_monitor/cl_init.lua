@@ -1,5 +1,6 @@
 include("shared.lua")
 include("cl_gpudraw_lite.lua")
+include("rt_mgr.lua")
 
 surface.CreateFont("SGC_SG1", {font="Stargate Address Glyphs Concept", size=35, weight=400, antialias=true, additive=false})
 surface.CreateFont("SGC_ABS", {font="Stargate Address Glyphs Concept", size=19, weight=400, antialias=true, additive=false})
@@ -19,6 +20,7 @@ surface.CreateFont("Marlett_25", {font="Marlett", size=25, weight=800, antialias
 surface.CreateFont("Marlett_27", {font="Marlett", size=27, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_29", {font="Marlett", size=29, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_35", {font="Marlett", size=35, weight=800, antialias=true, additive=false, })
+surface.CreateFont("Marlett_40", {font="Marlett", size=40, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_45", {font="Marlett", size=45, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_50", {font="Marlett", size=50, weight=800, antialias=true, additive=false, })
 surface.CreateFont("Marlett_61", {font="Marlett", size=61, weight=800, antialias=true, additive=false, })
@@ -37,7 +39,9 @@ if (SGLanguage ~=nil and SGLanguage.GetMessage ~=nil) then
   ENT.PrintName = SGLanguage.GetMessage("sgc_computer")
 end
 
+RT_SGC_Mon = GetRTManager("SGC_Mon", 512, 384, 100)
 function ENT:Initialize()
+  self.RT = RT_SGC_Mon:GetRT()
   self:LoadScreens()
 
   self:ScreenInit(512, 384, Vector(11.75, -512/2*0.04, 384/2*0.04+3.9), Angle(0, 90, 85.5), 0.04)
@@ -62,6 +66,9 @@ function ENT:Initialize()
   self.Server =nil
   self.IDCSound = CreateSound(self,"glebqip/idc_loop.wav")
   self.IDCSound:SetSoundLevel(55)
+  self.ScrollSND = CreateSound(self,"glebqip/scroll.wav")
+  self.ScrollSND:SetSoundLevel(55)
+  self.Scrolling = false
 end
 
 function ENT:Draw()
@@ -79,6 +86,7 @@ end
 local function AnimFromToXY(srcx,srcy,targetx,targety,state)
   return Lerp(state,srcx,targetx), Lerp(state,srcy,targety)
 end
+
 function ENT:Screen()
   if not self:GetNW2Bool("On",false) then return end
   if false and not self:GetNW2Bool("ServerConnected",false) then
@@ -191,22 +199,26 @@ function ENT:Screen()
     end
 
     local menu = self:GetNW2Int("MenuChoosed",0)
-    local scrool = self:GetNW2Int("MenuScrool",0)
+    local scroll = self:GetNW2Int("MenuScroll",0)
     if menu > 0 then
       surface.SetDrawColor(0,0,0)
       surface.DrawRect(292,168,9,79)
       surface.SetDrawColor(self.MainColor)
-      local maxscrool = math.max(0,(#self.Screens-8))
-      local scroolsize = math.floor(75/(maxscrool+1))
-      surface.DrawRect(293,171+(75-scroolsize)/maxscrool*scrool,7,scroolsize)
+      local maxscroll = math.max(0,(#self.Screens-8))
+      local scrollsize = math.floor(75/(maxscroll+1))
+      surface.DrawRect(293,171+(75-scrollsize)/maxscroll*scroll,7,scrollsize)
 
       surface.SetTexture(Select)
       surface.DrawTexturedRectRotated(256,192,256,256,0)
 
       surface.SetDrawColor(self.SecondColor)
-      surface.DrawRect(156,149+(menu-scrool)*12,132,11)
-      for i=1+scrool,math.min(8+scrool,#self.Screens) do
-        draw.SimpleText(self.Screens[i].Name, "Marlett_15", 157,154+(i-scrool)*12, menu == i and Color(0,0,0) or self.SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+      surface.DrawRect(156,149+(menu-scroll)*12,132,11)
+      for i=1+scroll,math.min(8+scroll,#self.Screens) do
+        if self.Screens[i] then
+          draw.SimpleText(self.Screens[i].Name, "Marlett_15", 157,154+(i-scroll)*12, menu == i and Color(0,0,0) or self.SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        else
+          draw.SimpleText("*RESERVED*", "Marlett_15", 157,154+(i-scroll)*12, menu == i and Color(0,0,0) or self.SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
       end
     end
   elseif self.Server:GetNW2Bool("On",false) then
@@ -236,6 +248,12 @@ function ENT:Screen()
 end
 
 function ENT:Think()
+  if self.CurrScreen == 8 and self:GetNW2Bool("ABScrolling",false) or self.CurrScreen == 9 and self:GetNW2Bool("GMScrolling",false) then
+    self.ScrollSND:Play()
+  else
+    self.ScrollSND:Stop()
+  end
+
   if self.CurrScreen ~= 5 or self.Screens[5].State ~= 2 then
     self.IDCSound:Stop()
   else
@@ -307,5 +325,11 @@ function ENT:Think()
 end
 
 function ENT:OnRemove()
+  self.ScrollSND:Stop()
   self.IDCSound:Stop()
+	local RT = self.RT
+	timer.Simple(0.1, function()
+		if IsValid(self) then return end
+		RT_SGC_Mon:FreeRT(RT)
+	end)
 end
