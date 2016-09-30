@@ -19,6 +19,13 @@ if SERVER then
     if not curr then return end
   end
 else
+
+  function SCR:Bind()
+    self:BindServerVar("Open","AnimDA",function(ent,name,old,new)
+      self.OpenCTimer = CurTime()
+      self.Open = new
+    end)
+  end
   function SCR:Initialize()
     self.Boxes = {}
     self.BoxesTimer = CurTime()
@@ -37,7 +44,7 @@ else
     self.Digits2 = {}
     self.Digits2Timer = CurTime()-3
 
-    self.IOpenCTimer = CurTime()-1
+    self.OpenCTimer = CurTime()-1
     self.Open = self:GetServerBool("Open",false)
   end
 
@@ -129,8 +136,8 @@ else
 
     surface.SetTexture(OpenRed)
     if open then
-      for i=0,(CurTime()-self.IOpenCTimer > 2 and 2 or 0) do
-        local anim = (CurTime()+i*2-self.IOpenCTimer)%4
+      for i=0,(CurTime()-self.OpenCTimer > 2 and 2 or 0) do
+        local anim = (CurTime()+i*2-self.OpenCTimer)%4
         if anim < 3 then
           surface.SetDrawColor(Red)
           surface.DrawTexturedRectRotated(381,105,256*anim/3,256*anim/3,0)
@@ -161,7 +168,7 @@ else
       end
     end
 
-    local ChevronState = math.Clamp((CurTime()-self.IOpenCTimer)*4,0,1)
+    local ChevronState = math.Clamp((CurTime()-self.OpenCTimer)*4,0,1)
     if not self:GetServerBool("Open") then ChevronState = 1-ChevronState end
     for i=1,9 do
       local ang = 180-(360/9)*i
@@ -206,10 +213,6 @@ else
     local active = self:GetServerBool("Active",false)
     local open = self:GetServerBool("Open",false)
 
-    if self.Open ~= open then
-      self.IOpenCTimer = CurTime()
-      self.Open = open
-    end
     if CurTime()-self.BoxesTimer > 0.15 and connected then
       for i=1,36 do
         self.Boxes[i] = math.random()>0.4

@@ -70,6 +70,13 @@ else
   local Gradient = surface.GetTextureID("vgui/gradient_down")
   local Red = Color(239,0,0)
 
+  function SCR:Bind()
+    self:BindServerVar("Open","AnimDC",function(ent,name,old,new)
+      self.OpenCTimer = CurTime()
+      self.Open = new
+    end)
+  end
+
   function SCR:Initialize(reinital)
     -- Blinking boxes
     self.Boxes1 = {}
@@ -422,10 +429,6 @@ else
     local chevron = self:GetServerInt("Chevron",0)
     local locked = self:GetServerBool("ChevronLocked",false)
     if not curr then return end
-    if self.Open ~= open then
-      self.OpenCTimer = CurTime()
-      self.Open = open
-    end
     if CurTime()-self.Boxes1Timer > 0.5 and connected then
       for i=1,24 do
         self.Boxes1[i] = math.random()>0.6
@@ -481,6 +484,8 @@ else
       elseif self.Error >= 3 then
         self.ErrorTimer = CurTime()+2
         self:EmitSound("glebqip/error_start.wav",65,100,0.6)
+      else
+        self.Error1Played = true
       end
     elseif self.Error == 0 and self.ErrorTimer then
       self.ErrorTimer = nil
@@ -502,7 +507,7 @@ else
     if self:GetServerBool("ChevronFirst", false) and not self.SymbolAnim then
       self.SymbolAnim = CurTime()
       if self:GetServerBool("IsMovie",false) then
-        self:EmitSound("glebqip/f_chevron_encode.wav",65,100,1)
+        self:EmitSound("glebqip/f_chevron_encode.wav",65,100,0.6)
       else
         self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
       end
@@ -524,7 +529,7 @@ else
     if self.OldDialingAddress ~= dialadd then
       if #self.OldDialingAddress < #dialadd and chevron ~= 0 and not inbound then
         if self:GetServerBool("IsMovie",false) then
-          self:EmitSound("glebqip/f_chevron_lock.wav",65,100,1)
+          self:EmitSound("glebqip/f_chevron_lock.wav",65,100,0.6)
         else
           self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
         end
@@ -534,7 +539,7 @@ else
     if self:GetServerBool("IsMovie",false) then
       local endT = self.EndTimer and (CurTime()-self.EndTimer)%0.6 > 0.3
       if self.OldLocked ~= endT then
-        if endT then self:EmitSound("glebqip/f_complete.wav",65,100,0.8) end
+        if endT then self:EmitSound("glebqip/f_complete.wav",65,100,0.6) end
         self.OldLocked = endT
       end
     else
@@ -547,7 +552,11 @@ else
     local LastSecond = active and not open and not inbound and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
     if LastSecond then
       if self.EndTimer == nil then
-        self.EndTimer = CurTime()
+        if self:GetServerBool("IsMovie",false) then
+          self.EndTimer = CurTime()
+        else
+          self.EndTimer = CurTime()-0.2
+        end
       end
     end
     if self.EndTimer ~= nil and (open or not active or inbound) then

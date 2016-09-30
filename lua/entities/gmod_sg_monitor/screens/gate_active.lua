@@ -164,6 +164,13 @@ if SERVER then
     end
   end
 else
+
+  function SCR:Bind()
+    self:BindServerVar("Open","AnimA",function(ent,name,old,new)
+      self.OpenCTimer = CurTime()
+      self.Open = not new
+    end)
+  end
   function SCR:Initialize(reinit)
     if not reinit then
       self.Digits1 = {}
@@ -178,6 +185,7 @@ else
       self.LinesTimer = CurTime()-10
     end
     self.Open = self:GetServerBool("Open",false)
+    self.OpenCTimer = CurTime()-10
 
     self.Matrix = Matrix()
   end
@@ -317,8 +325,8 @@ else
     surface.DrawTexturedRectRotated(0,0,197,197,self:GetServerInt("RingAngle",0)-4.615)
     surface.SetTexture(OpenRed)
     if open then
-      for i=0,(CurTime()-self.IOpenCTimer > 2 and 2 or 0) do
-        local anim = (CurTime()+i*2-self.IOpenCTimer)%4
+      for i=0,(CurTime()-self.OpenCTimer > 2 and 2 or 0) do
+        local anim = (CurTime()+i*2-self.OpenCTimer)%4
         if anim < 3 then
           surface.SetDrawColor(Red)
           surface.DrawTexturedRectRotated(0,0,256*anim/3,256*anim/3,0)
@@ -339,7 +347,7 @@ else
 
     surface.SetDrawColor(SecondColor)
 
-    local ChevronState = math.Clamp((CurTime()-self.IOpenCTimer)*4,0,1)
+    local ChevronState = math.Clamp((CurTime()-self.OpenCTimer)*4,0,1)
     if not self:GetServerBool("Open") then ChevronState = 1-ChevronState end
     for i=1,9 do
       local ang = 180-(360/9)*i
@@ -452,10 +460,6 @@ else
     end
     if curr and not self.StartAnim then
       self.StartAnim = CurTime()-3
-    end
-    if self.Open ~= open then
-      self.IOpenCTimer = CurTime()
-      self.Open = open
     end
   end
 end

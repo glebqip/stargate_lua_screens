@@ -18,6 +18,7 @@ function ENT:Draw()
   return true
 end
 
+
 function ENT:Initialize()
   self.OnSound = CreateSound(self,"glebqip/computer_loop.wav")
   self.OnSound:SetSoundLevel(55)
@@ -35,6 +36,32 @@ function ENT:Think()
       self.On = self:GetNW2Bool("On",false)
   end
 end
+
+function ENT:SolveHook(name,old,new)
+  if not self.HookBinds[name] then return end
+  for id, tbl in pairs(self.HookBinds[name]) do
+    if not IsValid(tbl[2]) then
+      print("Removing hook",name,id)
+      self.HookBinds[name][id] = nil
+      continue
+    end
+    tbl[1](self,name,old,new)
+  end
+end
+
+function ENT:BindNW2Hook(ent,hookname, name, func)
+  if not self.HookBinds then
+    self.HookBinds = {}
+    self.HookCleanups = {}
+  end
+  if not self.HookBinds[hookname] then
+    self:SetNWVarProxy(hookname,self.SolveHook)
+    self.HookBinds[hookname] = {} --create table with funcs
+  end
+  self.HookBinds[hookname][name.."."..ent:EntIndex()] = {func,ent}
+  print(ent,hookname)
+end
+
 function ENT:OnRemove()
   self.OnSound:Stop()
   self:EmitSound("glebqip/computer_end.wav",55)

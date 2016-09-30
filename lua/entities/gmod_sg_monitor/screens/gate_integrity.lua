@@ -18,6 +18,31 @@ if SERVER then
   function SCR:Trigger(curr,key,value)
   end
 else
+  function SCR:Bind()
+    self:BindServerVar("IDCState","State", function(ent,name,old,new)
+      self.State = new
+      if self.State == 1 then
+        local code = self:GetServerString("IDCCode","")
+        for i=1,200 do
+          local symb = (tonumber(code[math.ceil(i/200*14)]) or 0)/10
+          local maxval = (1+44*symb)*(i%2 == 0 and -1 or 1)
+          self.Lines[i] = math.Rand(maxval/4,maxval)
+        end
+      end
+      self.LinesTimer = CurTime()
+      if self.State == 2 then
+        self:EmitSound("glebqip/idc_beep_start.wav",65,100,0.3)
+        self.LinesTimer = CurTime()+0.15
+      end
+      if self.State == 3 then
+        self:EmitSound("glebqip/idc_numb_start.wav",65,100,0.3)
+        self.AnalyzingCode = string.Explode("",self:GetServerString("IDCCode",""))
+        self.AnalyzedCode = {}
+        self.LinesTimer = CurTime()-0.1
+      end
+    end)
+  end
+
   function SCR:Initialize(reinit)
     self.Boxes = {}
     self.BoxesTimer = CurTime()
@@ -224,29 +249,6 @@ else
       self.WarnTimer = CurTime()
     end
 
-    local state = self:GetServerInt("IDCState",0)
-    if state and self.State ~= state then
-      self.State = state
-      if self.State == 1 then
-        local code = self:GetServerString("IDCCode","")
-        for i=1,200 do
-          local symb = (tonumber(code[math.ceil(i/200*14)]) or 0)/10
-          local maxval = (1+44*symb)*(i%2 == 0 and -1 or 1)
-          self.Lines[i] = math.Rand(maxval/4,maxval)
-        end
-      end
-      self.LinesTimer = CurTime()
-      if self.State == 2 then
-        self:EmitSound("glebqip/idc_beep_start.wav",65,100,0.3)
-        self.LinesTimer = CurTime()+0.15
-      end
-      if self.State == 3 then
-        self:EmitSound("glebqip/idc_numb_start.wav",65,100,0.3)
-        self.AnalyzingCode = string.Explode("",self:GetServerString("IDCCode",""))
-        self.AnalyzedCode = {}
-        self.LinesTimer = CurTime()-0.1
-      end
-    end
     if self.State > 2 and CurTime()-self.LinesTimer > 0.1 then
       local done = true
       for i=1,#self.AnalyzingCode do

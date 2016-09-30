@@ -44,8 +44,8 @@ if SERVER then
     end
     self.Count = count
     self:SetMonitorInt("ABSelected",self.Selected)
-    self:SetMonitorBool("ABScrolling", self.OldScroll ~= self.Scroll)
-    self.OldScroll = self.Scroll
+    --self:SetMonitorBool("ABScrolling", self.OldScroll ~= self.Scroll)
+    --self.OldScroll = self.Scroll
     --
   end
   function SCR:Trigger(curr,key,value)
@@ -73,6 +73,10 @@ if SERVER then
 
   end
 else
+  function SCR:Bind()
+    self:BindMonitorVar("ABScroll", "Sound", function() self.Scrooling = CurTime() end)
+  end
+
   function SCR:Initialize()
     self.Symbols = {}
     self.SymbolsTimer = CurTime()-1
@@ -163,7 +167,10 @@ else
       end
       self.SymbolsTimer = CurTime()
     end
+
+    if self.Scrooling and CurTime()-self.Scrooling > 0.15 then self.Scrooling = false end
   end
+
 end
 
 return SCR

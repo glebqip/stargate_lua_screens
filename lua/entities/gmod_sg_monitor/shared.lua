@@ -43,6 +43,11 @@ function ENT:RegisterScreenFunctions(screen)
     screen.SetMonitorFloat = function(_, id, val) return screen.Entity:SetNW2Float(id, val) end
     screen.SetMonitorString = function(_, id, val) return screen.Entity:SetNW2String(id, val) end
   else
+    screen.BindMonitorVar = function(_, ...) screen.Entity:BindNW2Hook(...) end
+    screen.BindServerVar = function(_, ...)
+      if not IsValid(screen.Entity.Server) then return end
+      screen.Entity.Server:BindNW2Hook(screen.Entity,...)
+    end
     function screen.TextEllipsis(str, maxw, font, ellipsis) //by Mijyuoon
       surface.SetFont(font)
       ellipsis = ellipsis or "..."
@@ -80,6 +85,7 @@ function ENT:LoadScreens()
       self:RegisterScreenFunctions(self.Screens[ID])
       self.Screens[ID]:Initialize()
     end
+    if self.Screens[ID].Bind then self.Screens[ID]:Bind() end
   end
 end
 --[[

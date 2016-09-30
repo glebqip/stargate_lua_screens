@@ -63,12 +63,35 @@ function ENT:Initialize()
   self.NoSignalYDir = 1
   self.NoSignalX = 0
   self.NoSignalY = 0
-  self.Server =nil
+  self.Server = self:GetNW2Entity("Server")
   self.IDCSound = CreateSound(self,"glebqip/idc_loop.wav")
   self.IDCSound:SetSoundLevel(55)
   self.ScrollSND = CreateSound(self,"glebqip/scroll.wav")
   self.ScrollSND:SetSoundLevel(55)
   self.Scrolling = false
+  self:SetNWVarProxy("Server",function(srv,name,oldval,newval)
+    self.Server = newval
+    for k,v in pairs(self.Screens) do
+      if v.Bind then v:Bind() end
+    end
+  end)
+end
+
+function ENT:SolveHook(name,old,new)
+  if not self.HookBinds[name] then return end
+  for id, func in pairs(self.HookBinds[name]) do
+    func(self,name,old,new)
+  end
+end
+
+function ENT:BindNW2Hook(hookname, name, func)
+  if not self.HookBinds then self.HookBinds = {} end
+  if not self.HookBinds[hookname] then
+    self:SetNWVarProxy(hookname,self.SolveHook)
+    self.HookBinds[hookname] = {} --create table with funcs
+  end
+  --table.insert(self.HookBinds[hookname],func)
+  self.HookBinds[hookname][name] = func
 end
 
 function ENT:Draw()
@@ -224,22 +247,22 @@ function ENT:Screen()
   elseif self.Server:GetNW2Bool("On",false) then
     local LoadState = self.Server:GetNW2Int("LoadState",-1)
     if LoadState > 1 then
-      draw.SimpleText("Stargate command BIOS", "Marlett_21", 40,0, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-      draw.SimpleText("Copyright (C) 1990-99", "Marlett_21", 40,20, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+      draw.SimpleText("Stargate command BIOS", "Marlett_21", 40,0, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+      draw.SimpleText("Copyright (C) 1990-99", "Marlett_21", 40,20, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 
       if LoadState > 2 then
-        draw.SimpleText("Processor: Intel Pentium MMX 233 MHz", "Marlett_21", 10,20*3, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Processor: Intel Pentium MMX 233 MHz", "Marlett_21", 10,20*3, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
       end
       if LoadState > 3 then
         local time = math.min(25000,(CurTime()-self.StartTime)*25000/3)
-        draw.SimpleText(string.format("Memory test: %d %s",time,time == 25000 and "OK" or ""), "Marlett_21", 10,20*4, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText(string.format("Memory test: %d %s",time,time == 25000 and "OK" or ""), "Marlett_21", 10,20*4, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
       end
       if LoadState > 4 then
         local time = math.min(0x25A80000,(CurTime()-self.StartTime2)*0x25A80000/2)
-        draw.SimpleText(string.format("Сhecking resources: 0x%X %s",time,time == 0x25A80000 and "OK" or ""), "Marlett_21", 10,20*5, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText(string.format("Сhecking resources: 0x%X %s",time,time == 0x25A80000 and "OK" or ""), "Marlett_21", 10,20*5, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
       end
       if LoadState > 5 then
-        draw.SimpleText("Booting"..string.rep(".",CurTime()%0.5*6+0.5), "Marlett_21", 10,20*7, Color(150,150,150), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        draw.SimpleText("Booting"..string.rep(".",CurTime()%0.5*6+0.5), "Marlett_21", 10,20*7, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
       end
     end
   end
@@ -248,7 +271,7 @@ function ENT:Screen()
 end
 
 function ENT:Think()
-  if self.CurrScreen == 8 and self:GetNW2Bool("ABScrolling",false) or self.CurrScreen == 9 and self:GetNW2Bool("GMScrolling",false) then
+  if self.CurrScreen == 8 and self.Screens[8].Scrooling or self.CurrScreen == 9 and self.Screens[9].Scrooling then
     self.ScrollSND:Play()
   else
     self.ScrollSND:Stop()
@@ -265,7 +288,6 @@ function ENT:Think()
     self.RequestScreenReload = false
     self:LoadScreens()
   end
-  self.Server = self:GetNW2Entity("Server")
   if not IsValid(self.Server) then
     return
   end
