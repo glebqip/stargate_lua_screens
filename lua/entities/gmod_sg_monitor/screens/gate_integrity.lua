@@ -68,14 +68,14 @@ else
     end
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/integrity screen 1/mainframe")
-  local CodeRes = surface.GetTextureID("glebqip/integrity screen 1/code_response")
+  local MainFrame = surface.GetTextureID("glebqip/integrity_screen_1/mainframe")
+  local CodeRes = surface.GetTextureID("glebqip/integrity_screen_1/code_response")
 
-  local WarnIncom = surface.GetTextureID("glebqip/integrity screen 1/warn_incomming")
-  local WarnRec = surface.GetTextureID("glebqip/integrity screen 1/warn_receive")
-  local WarnAcc = surface.GetTextureID("glebqip/integrity screen 1/warn_accept")
-  local WarnExp = surface.GetTextureID("glebqip/integrity screen 1/warn_expired")
-  local WarnErr = surface.GetTextureID("glebqip/integrity screen 1/warn_error")
+  local WarnIncom = surface.GetTextureID("glebqip/integrity_screen_1/warn_incomming")
+  local WarnRec = surface.GetTextureID("glebqip/integrity_screen_1/warn_receive")
+  local WarnAcc = surface.GetTextureID("glebqip/integrity_screen_1/warn_accept")
+  local WarnExp = surface.GetTextureID("glebqip/integrity_screen_1/warn_expired")
+  local WarnErr = surface.GetTextureID("glebqip/integrity_screen_1/warn_error")
 
   --local Gradient = surface.GetTextureID("vgui/gradient_down")
   local CenterGrad = surface.GetTextureID("gui/center_gradient")

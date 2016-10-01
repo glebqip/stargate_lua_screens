@@ -54,7 +54,7 @@ else
   end
   local Stars = {}
   for i=1,20 do
-    Stars[i] = surface.GetTextureID("glebqip/galaxy map 1/stars"..i)
+    Stars[i] = surface.GetTextureID("glebqip/galaxy_map_1/stars"..i)
   end
   function SCR:Initialize()
     self.Show = -1
@@ -85,9 +85,9 @@ else
     end
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/galaxy map 1/mainframe")
-  local Gate = surface.GetTextureID("glebqip/galaxy map 1/gate")
-  local Arrow = surface.GetTextureID("glebqip/galaxy map 1/arrow")
+  local MainFrame = surface.GetTextureID("glebqip/galaxy_map_1/mainframe")
+  local Gate = surface.GetTextureID("glebqip/galaxy_map_1/gate")
+  local Arrow = surface.GetTextureID("glebqip/galaxy_map_1/arrow")
   local Red = Color(239,0,0)
 
   local gates ={"STD","MOV","INF","ATL","TOL","UNI"}

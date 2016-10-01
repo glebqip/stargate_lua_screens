@@ -60,13 +60,13 @@ if SERVER then
     end
   end
 else
-  local MainFrame = surface.GetTextureID("glebqip/dial screen 1/MainFrame")
-  local Boxes = surface.GetTextureID("glebqip/dial screen 1/Boxes")
-  local Ring = surface.GetTextureID("glebqip/dial screen 1/Ring")
-  local RingArcs = surface.GetTextureID("glebqip/dial screen 1/RingArcs")
-  local Chevron = surface.GetTextureID("glebqip/dial screen 1/Chevron")
-  local Chevron7 = surface.GetTextureID("glebqip/dial screen 1/Chevron7")
-  local ChevronBox = surface.GetTextureID("glebqip/dial screen 1/ChevronBox")
+  local MainFrame = surface.GetTextureID("glebqip/dial_screen_1/mainframe")
+  local Boxes = surface.GetTextureID("glebqip/dial_screen_1/boxes")
+  local Ring = surface.GetTextureID("glebqip/dial_screen_1/ring")
+  local RingArcs = surface.GetTextureID("glebqip/dial_screen_1/ringarcs")
+  local Chevron = surface.GetTextureID("glebqip/dial_screen_1/chevron")
+  local Chevron7 = surface.GetTextureID("glebqip/dial_screen_1/chevron7")
+  local ChevronBox = surface.GetTextureID("glebqip/dial_screen_1/chevronbox")
   local Gradient = surface.GetTextureID("vgui/gradient_down")
   local Red = Color(239,0,0)
 

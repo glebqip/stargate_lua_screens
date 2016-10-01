@@ -1,8 +1,0 @@
-UnlitGeneric
-{
-	$basetexture "glebqip/data screen 1/OpenRed"
-	$nolod 1
-	$ignorez 1
-	$vertexcolor 1
-	$vertexalpha 1
-}

@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/select"
+	$basetexture "glebqip/address_book_1/address"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

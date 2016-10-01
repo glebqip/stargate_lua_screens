@@ -82,10 +82,10 @@ else
     self.SymbolsTimer = CurTime()-1
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/address book 1/mainframe")
-  local Address7 = surface.GetTextureID("glebqip/address book 1/address")
-  local Address8 = surface.GetTextureID("glebqip/address book 1/address8")
-  local Address9 = surface.GetTextureID("glebqip/address book 1/address9")
+  local MainFrame = surface.GetTextureID("glebqip/address_book_1/mainframe")
+  local Address7 = surface.GetTextureID("glebqip/address_book_1/address")
+  local Address8 = surface.GetTextureID("glebqip/address_book_1/address8")
+  local Address9 = surface.GetTextureID("glebqip/address_book_1/address9")
 
   local Red = Color(239,0,0)
 

@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/select"
+	$basetexture "glebqip/energy_output_s/rw_circle"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

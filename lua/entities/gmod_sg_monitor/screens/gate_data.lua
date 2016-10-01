@@ -48,18 +48,18 @@ else
     self.Open = self:GetServerBool("Open",false)
   end
 
-  local MainLeft = surface.GetTextureID("glebqip/data screen 1/main_left")
-  local MainRight = surface.GetTextureID("glebqip/data screen 1/main_right")
-  local GateFrame = surface.GetTextureID("glebqip/data screen 1/gate_frame")
+  local MainLeft = surface.GetTextureID("glebqip/data_screen_1/main_left")
+  local MainRight = surface.GetTextureID("glebqip/data_screen_1/main_right")
+  local GateFrame = surface.GetTextureID("glebqip/data_screen_1/gate_frame")
 
-  local Gate = surface.GetTextureID("glebqip/data screen 1/gate_back")
-  local Ring = surface.GetTextureID("glebqip/dial screen 1/Ring")
-  local RingArcs = surface.GetTextureID("glebqip/dial screen 1/RingArcs")
-  local Chevron = surface.GetTextureID("glebqip/dial screen 1/Chevron")
-  local Chevron7 = surface.GetTextureID("glebqip/dial screen 1/Chevron7")
-  local ChevronBox = surface.GetTextureID("glebqip/dial screen 1/ChevronBox")
+  local Gate = surface.GetTextureID("glebqip/data_screen_1/gate_back")
+  local Ring = surface.GetTextureID("glebqip/dial_screen_1/ring")
+  local RingArcs = surface.GetTextureID("glebqip/dial_screen_1/ringarcs")
+  local Chevron = surface.GetTextureID("glebqip/dial_screen_1/chevron")
+  local Chevron7 = surface.GetTextureID("glebqip/dial_screen_1/chevron7")
+  local ChevronBox = surface.GetTextureID("glebqip/dial_screen_1/chevronbox")
 
-  local OpenRed = surface.GetTextureID("glebqip/data screen 1/OpenRed")
+  local OpenRed = surface.GetTextureID("glebqip/data_screen_1/openred")
 
   local Red = Color(239,0,0)
 

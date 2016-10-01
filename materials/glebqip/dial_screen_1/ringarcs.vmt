@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/select"
+	$basetexture "glebqip/dial_screen_1/ringarcs"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

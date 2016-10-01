@@ -29,7 +29,7 @@ else
     end
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/energy flux 1/mainframe")
+  local MainFrame = surface.GetTextureID("glebqip/energy_flux_1/mainframe")
 
   local Gradient = surface.GetTextureID("vgui/gradient_down")
 

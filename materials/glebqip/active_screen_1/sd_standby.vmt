@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	$basetexture "glebqip/select"
+	$basetexture "glebqip/active_screen_1/sd_standby"
 	$nolod 1
 	$ignorez 1
 	$vertexcolor 1

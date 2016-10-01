@@ -31,12 +31,12 @@ else
     self.Max = math.Rand(0.05,1)
   end
 
-  local MainFrame = surface.GetTextureID("glebqip/energy output s/mainframe")
-  local Circle = surface.GetTextureID("glebqip/energy output s/rw_circle")
+  local MainFrame = surface.GetTextureID("glebqip/energy_output_s/mainframe")
+  local Circle = surface.GetTextureID("glebqip/energy_output_s/rw_circle")
 
   local GradientL = surface.GetTextureID("gui/gradient")
   local GradientR = surface.GetTextureID("vgui/gradient-r")
-  local Gradient = surface.GetTextureID("glebqip/energy output f/gradient")
+  local Gradient = surface.GetTextureID("glebqip/energy_output_f/gradient")
 
 
   local Red = Color(239,0,0)
