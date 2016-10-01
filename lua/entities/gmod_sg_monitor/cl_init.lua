@@ -46,7 +46,7 @@ function ENT:Initialize()
 
   self:ScreenInit(512, 384, Vector(11.75, -512/2*0.04, 384/2*0.04+3.9), Angle(0, 90, 85.5), 0.04)
   --Colors:Movie
-  self.MainColor = Color(42, 125, 225)
+  self.MainColor = Color(30, 120, 240)
   self.ChevBoxesColor = self.MainColor
   self.SecondColor = Color(229, 238, 179)
   --Colors:First series

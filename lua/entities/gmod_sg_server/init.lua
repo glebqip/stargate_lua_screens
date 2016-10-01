@@ -504,7 +504,7 @@ function ENT:Think()
 	else
 		self.Iris = true
 	end
-	if IsValid(self.IDCReceiver) and IsValid(self.IDCReceiver.LockedIris) and self.IDCReceiver.LockedIris.IsActivated ~= self.Iris then
+	if IsValid(self.IDCReceiver) and IsValid(self.IDCReceiver.LockedIris) and self.IDCReceiver.LockedIris.Toggle and self.IDCReceiver.LockedIris.IsActivated ~= self.Iris then
 		self.IDCReceiver.LockedIris:Toggle()
 	end
 	self:SetNW2Bool("Connected", IsValid(gate))

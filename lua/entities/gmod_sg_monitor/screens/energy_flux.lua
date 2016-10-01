@@ -24,7 +24,7 @@ else
     self.GradientsTimers = {}
     self.GradientSpeeds = {}
     for i=1,30 do
-      self.GradientSpeeds[i] = math.Rand(0.4,0.8)
+      self.GradientSpeeds[i] = math.Rand(0.8,1.2)
       self.GradientsTimers[i] = CurTime()-self.GradientSpeeds[i]/math.random()
     end
   end
@@ -46,7 +46,7 @@ else
     for i=1,3*5*3*2 do
       local id = math.ceil(i/3)-1
       if (CurTime() - self.GradientsTimers[id+1])/self.GradientSpeeds[id+1] > 1 then continue end
-      local speed = i%3 == 0 and 4 or i%3 == 1 and 2 or 1
+      local speed = i%3 == 0 and 5 or i%3 == 1 and 3 or 1
       local state = ((CurTime() - self.GradientsTimers[id+1])/self.GradientSpeeds[id+1])*speed%1
       local size = state*39
 
@@ -70,7 +70,7 @@ else
     if not curr then return end
     for i=1,30 do
       if CurTime() - self.GradientsTimers[i] > self.GradientSpeeds[i] and self:GetServerBool("Active",false) then
-        self.GradientSpeeds[i] = math.Rand(0.4,0.8)
+        self.GradientSpeeds[i] = math.Rand(0.8,1.2)
         self.GradientsTimers[i] = CurTime()
       end
     end

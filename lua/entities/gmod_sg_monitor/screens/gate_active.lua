@@ -168,7 +168,7 @@ else
   function SCR:Bind()
     self:BindServerVar("Open","AnimA",function(ent,name,old,new)
       self.OpenCTimer = CurTime()
-      self.Open = not new
+      self.Open = new
     end)
   end
   function SCR:Initialize(reinit)

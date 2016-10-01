@@ -250,6 +250,14 @@ else
         draw.OutlinedBox(440, 37+i*43, 64, 40, 2)
       end
     end
+
+    if self.Movie and self.EndTimer and (CurTime()-self.EndTimer)%0.6 > 0.3 then
+      for i=0,#dialadd-1 do
+        surface.SetDrawColor(MainColor)
+        if NLocal then surface.DrawRect(439,35+i*39,65,41) else surface.DrawRect(439,37+i*43,65,41) end
+      end
+    end
+
     if not self:GetServerBool("Inbound",false) then
       local color = color_white
       if self.Error ~= 0 then
@@ -265,22 +273,14 @@ else
       end
     end
 
-    if self.EndTimer then
-      local anim
-      if self:GetServerBool("IsMovie",false) then
-        anim = (CurTime()-self.EndTimer)%0.6 > 0.3 and 255 or 0
-      else
-        anim = math.abs(math.sin((CurTime()-self.EndTimer)%0.4/0.4*math.pi))*240---EndTimer
-      end
+    if not self.Movie and self.EndTimer then
+      local anim = math.abs(math.sin((CurTime()-self.EndTimer)%0.4/0.4*math.pi))*240---EndTimer
       for i=0,#dialadd-1 do
         surface.SetDrawColor(Color(12,96,104,math.min(255,anim)))
-        if NLocal then
-          surface.DrawRect(439,35+i*39,65,41)
-        else
-          surface.DrawRect(439,37+i*43,65,41)
-        end
+        if NLocal then surface.DrawRect(439,35+i*39,65,41) else surface.DrawRect(439,37+i*43,65,41) end
       end
     end
+
     surface.SetAlphaMultiplier(1)
 
     for i=1,#dialadd + (self.Timer8 and #dialadd < 8 and 1 or 0) do
@@ -373,8 +373,16 @@ else
       self.Matrix:Scale(Vector(scale,scale,scale))
       self.Matrix:Translate(Vector(0,0,0))
       --surface.SetAlphaMultiplier(alpha)
-      surface.SetDrawColor(Color(255,255,255,alpha*255))
-      if xb then draw.OutlinedBox(xb,yb,wb,hb,2) end
+      if xb then
+        if self.Movie then
+          surface.SetDrawColor(Color(239,50,50,alpha*255))
+          surface.DrawOutlinedRect(xb,yb,wb,hb)
+          surface.SetDrawColor(Color(255,255,255,alpha*255))
+        else
+          surface.SetDrawColor(Color(255,255,255,alpha*255))
+          draw.OutlinedBox(xb,yb,wb,hb,2)
+        end
+      end
       --surface.SetAlphaMultiplier(1)
       cam.PushModelMatrix(self.Matrix)
         draw.SimpleText(symbol, "SGC_Symb", 0,0, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
@@ -429,11 +437,16 @@ else
     local chevron = self:GetServerInt("Chevron",0)
     local locked = self:GetServerBool("ChevronLocked",false)
     if not curr then return end
+    self.Movie = self:GetServerBool("IsMovie",false)
     if CurTime()-self.Boxes1Timer > 0.5 and connected then
       for i=1,24 do
         self.Boxes1[i] = math.random()>0.6
       end
-      self.Boxes1Timer = CurTime()
+      if self.Movie then
+        self.Boxes1Timer = CurTime()-0.25
+      else
+        self.Boxes1Timer = CurTime()
+      end
     end
     if CurTime()-self.Boxes2Timer > 0.15 and connected then
       for i=1,36 do
@@ -441,28 +454,40 @@ else
       end
       self.Boxes2Timer = CurTime()
     end
+
     if CurTime()-self.DigitsTimer > 0.15 then
-      if connected and active and math.random()>0.2 then
+      if connected and active and math.random()>0.15 then
         local str = ""
-        local typ = math.random()>0.3
-        for _=math.random(2,4),math.random(6,11) do
-          if typ then
-            str = str..tostring(math.random(0,9))
-          else
-            str = str..tostring(math.random(0,1))
+        if math.random() > 0.8 then
+          self.DigitsType = math.random()>0.5
+        end
+        if not self.Movie or self.DigitsType then
+          for _=math.random(2,4),math.random(6,11) do
+            if self.DigitsType then
+              str = str..tostring(math.random(0,9))
+            else
+              str = str..tostring(math.random(0,1))
+            end
           end
+        else
+          local char = tostring(math.random(0,1))
+          for _=1,11 do str = str..char end
         end
         table.insert(self.Digits,1,str)
       else
         table.insert(self.Digits,1,false)
       end
       table.remove(self.Digits,14)
-      self.DigitsTimer = CurTime()
+      if self.Movie then
+        self.DigitsTimer = CurTime()-0.05
+      else
+        self.DigitsTimer = CurTime()
+      end
     end
 
     for i=1,9 do
       if CurTime() - self.GradientsTimers[i] > self.GradientSpeeds[i] and active and (inbound or open or self:GetServerBool("RingRotation",false)) then
-        self.GradientSpeeds[i] = math.Rand(0.4,0.8)
+        self.GradientSpeeds[i] = math.Rand(0.4,0.7)
         self.GradientsTimers[i] = CurTime()
       end
     end
@@ -506,7 +531,7 @@ else
 
     if self:GetServerBool("ChevronFirst", false) and not self.SymbolAnim then
       self.SymbolAnim = CurTime()
-      if self:GetServerBool("IsMovie",false) then
+      if self.Movie then
         self:EmitSound("glebqip/f_chevron_encode.wav",65,100,0.6)
       else
         self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
@@ -517,26 +542,26 @@ else
     end
     if self:GetServerBool("ChevronSecond", false) and not self.SymbolAnim2 then
       self.SymbolAnim2 = CurTime()
-      if not self:GetServerBool("IsMovie",false) then
+      if not self.Movie then
         self:EmitSound("glebqip/dial_chevron_encode2.wav",65,100,1)
       end
-      --self:EmitSound("glebqip/dial_chevron_encode_fr.wav",65,100,0.8)
-      --self:EmitSound("alexalx/glebqip/dp_locked.wav",65,100,0.8)
     elseif not self:GetServerBool("ChevronSecond", false) and self.SymbolAnim2 then
       self.SymbolAnim2 = nil
     end
 
     if self.OldDialingAddress ~= dialadd then
       if #self.OldDialingAddress < #dialadd and chevron ~= 0 and not inbound then
-        if self:GetServerBool("IsMovie",false) then
+        if self.Movie then
           self:EmitSound("glebqip/f_chevron_lock.wav",65,100,0.6)
+          self.Digits = {}
+          self.DigitsTimer = CurTime()
         else
           self:EmitSound("glebqip/dial_chevron_beep2.wav",65,100,0.8)
         end
       end
       self.OldDialingAddress = dialadd
     end
-    if self:GetServerBool("IsMovie",false) then
+    if self.Movie then
       local endT = self.EndTimer and (CurTime()-self.EndTimer)%0.6 > 0.3
       if self.OldLocked ~= endT then
         if endT then self:EmitSound("glebqip/f_complete.wav",65,100,0.6) end
@@ -552,7 +577,7 @@ else
     local LastSecond = active and not open and not inbound and locked and (not self.SymbolAnim2 or (CurTime()-self.SymbolAnim2) > 0.6)
     if LastSecond then
       if self.EndTimer == nil then
-        if self:GetServerBool("IsMovie",false) then
+        if self.Movie then
           self.EndTimer = CurTime()
         else
           self.EndTimer = CurTime()-0.2
