@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Energy output (film)",
-  ID = 6,
+  ID = 8,
 }
 
 if SERVER then
@@ -35,38 +35,40 @@ else
   local Red = Color(239,0,0)
 
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
-    local py = (CurTime()-self.DigitsTimer)%0.2*5-1
-    for i=1,#self.Digits do
-      if self.Digits[i] then
-        draw.SimpleText(self.Digits[i], "Marlett_12", 97, 43+(i-1)*13+py*13, MainColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-      end
-    end
     surface.SetDrawColor(MainColor)
     surface.SetTexture(MainFrame)
     surface.DrawTexturedRectRotated(256,192,512,512,0)
+    render.SetScissorRect(0,37,178,350,true)
+      local py = (CurTime()-self.DigitsTimer)%0.2*5-1
+      for i=1,#self.Digits do
+        if self.Digits[i] then
+          draw.SimpleText(self.Digits[i], "Marlett_12", 97, 43+(i-1)*13+py*13, MainColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        end
+      end
+    render.SetScissorRect(0,0,0,0,false)
 
-		render.ClearStencil()
-		render.SetStencilEnable(true)
-		render.SetStencilTestMask(255);render.SetStencilWriteMask(255);render.SetStencilReferenceValue(10)
-		render.SetStencilPassOperation(STENCIL_REPLACE)
-		render.SetStencilFailOperation(STENCIL_KEEP)
-		render.SetStencilZFailOperation(STENCIL_KEEP)
-		render.SetStencilCompareFunction(STENCIL_ALWAYS)
-      local anim = (CurTime()-self.LinesTimer)%3
-      local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
-      if anim > 2 then st = anim-2 end
-      if anim < 1 then en = anim end
+    local anim = (CurTime()-self.LinesTimer)%3
+    local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
+    if anim > 2 then st = anim-2 end
+    if anim < 1 then en = anim end
+    render.SetScissorRect(126+st*351,107,126+en*351,344,true)
+    render.ClearStencil()
+    render.SetStencilEnable(true)
+    render.SetStencilTestMask(255);render.SetStencilWriteMask(255);render.SetStencilReferenceValue(10)
+    render.SetStencilPassOperation(STENCIL_REPLACE)
+    render.SetStencilFailOperation(STENCIL_KEEP)
+    render.SetStencilZFailOperation(STENCIL_KEEP)
+    render.SetStencilCompareFunction(STENCIL_ALWAYS)
       --surface.SetDrawColor(Color(45,150,60))
-      draw.DrawTLine(126+Lerp(st*17,0,20),195,126+Lerp(en*17,0,20),195,2)
-      draw.DrawTLine(452+Lerp((st-(1-1/17))*17,0,20),195,452+Lerp((en-(1-1/17))*17,0,21),195,2)
-      --surface.DrawLine(126+310+29*st,193,126+347,193)
+      draw.DrawTLine(126,195,152,195,2)
+      draw.DrawTLine(447,195,473,195,2)
       local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
       if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
       if anim > 2 then
         anim = anim-2
         st = math.max(anim+anim*40/305-20/305,0)
       end
-      local ie = math.ceil(60*en)
+      local ie = math.ceil(60*(en+0.08))
       if ie ~= self.EndLine and ie > 1 and ie < 60 then
         if self.Active then
           local double = not self:GetServerBool("Local",false)
@@ -82,7 +84,7 @@ else
         end
         self.EndLine = ie
       end
-      for i=math.ceil(60*st),(60)*en do
+      for i=1,60 do
         local x1 = math.floor(301/60*i)
         local x2 = math.floor(301/60*(i+1));
         local y1 = self.Lines[i] or 0
@@ -95,6 +97,8 @@ else
       surface.SetTexture(Gradient)
       surface.DrawTexturedRectRotated(300,194,351,301,0)
 		render.SetStencilEnable(false)
+    render.SetScissorRect(0,0,0,0,false)
+		--render.SetStencilTestMask(3);render.SetStencilWriteMask(3);render.SetStencilReferenceValue(3)
   end
 
   function SCR:Think(curr)

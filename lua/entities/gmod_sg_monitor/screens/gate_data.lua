@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Gate data monitor",
-  ID = 2,
+  ID = 3,
 }
 
 if SERVER then
@@ -86,39 +86,7 @@ else
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
     local open = self:GetServerBool("Open",false)
     local py = (CurTime()-self.Digits1Timer)%0.5*2-1
-    if CurTime()-self.Digits2Timer < 4 then
-      local anim = (CurTime()-self.Digits2Timer)%4
-      local x,w = 0,0
-      if anim < 1 then
-        w = 1-anim
-        x = anim
-      elseif anim > 3 then
-        w = anim-3
-      end
-      for i=0,3 do
-        if self.Digits2[i+1] then
-          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-          --SCR.drawText(259,402+i*10,self.Digits2[i+1],0,1,SecondColor,font("Marlett",10)) --FIXME
-        end
-      end
-      if w > 0 then
-        surface.SetDrawColor(Color(0,0,0))
-        surface.DrawRect(255+x*152,332,152*w,41)
-      end
-    end
 
-    if #self.Digits1 > 0 then
-      for i=0,#self.Digits1-1 do
-        if self.Digits1[i+1] then
-          --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
-          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        end
-      end
-    end
-    if open then
-      surface.SetDrawColor(Color(109,196,255,100))
-      surface.DrawRect(88,350,158,22)
-    end
     surface.SetDrawColor(MainColor)
     surface.SetTexture(MainLeft)
     surface.DrawTexturedRectRotated(127,192,256,512,0)
@@ -193,6 +161,38 @@ else
 
     draw.SimpleText("CONDITION:", "Marlett_15", 255, 210, MainColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 
+    if CurTime()-self.Digits2Timer < 4 then
+      local anim = (CurTime()-self.Digits2Timer)%4
+      local x,w = 0,0
+      if anim < 1 then
+        w = anim
+      elseif anim > 3 then
+        x = anim-3
+        w = 1
+      end
+      if w > 0 then render.SetScissorRect(255+x*152,332,255+x*152+152*w,332+41, true )  end
+      for i=0,3 do
+        if self.Digits2[i+1] then
+          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 259,338+i*10, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+          --SCR.drawText(259,402+i*10,self.Digits2[i+1],0,1,SecondColor,font("Marlett",10)) --FIXME
+        end
+      end
+    end
+
+    render.SetScissorRect(88,33,246,371, true )
+    if #self.Digits1 > 0 then
+      for i=0,#self.Digits1-1 do
+        if self.Digits1[i+1] then
+          --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
+          draw.SimpleText(self.Digits1[i+1], "Marlett_12", 92,33+(i+py)*11+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        end
+      end
+    end
+    render.SetScissorRect(0,0,0,0,false)
+    if open then
+      surface.SetDrawColor(Color(109,196,255,100))
+      surface.DrawRect(88,350,158,22)
+    end
     if open then
       draw.SimpleText("ACTIVE", "Marlett_15", 330, 210, Color(20,160,20), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     else

@@ -19,9 +19,14 @@ function ENT:RegisterScreenFunctions(screen)
   screen.GetMonitorInt = function(_, id, default) return screen.Entity:GetNW2Int(id, default) end
   screen.GetMonitorString = function(_, id, default) return screen.Entity:GetNW2String(id, default) end
   screen.GetMonitorFloat = function(_, id, default) return screen.Entity:GetNW2Float(id, default) end
+  screen.GetMonitorEntity = function(_, id, default) return screen.Entity:GetNW2Entity(id, default) end
   screen.GetServerBool = function(_,id, default)
     if not IsValid(screen.Entity.Server) then return default end
     return screen.Entity.Server:GetNW2Bool(id, default)
+  end
+  screen.GetServerEntity = function(_,id, default)
+    if not IsValid(screen.Entity.Server) then return default end
+    return screen.Entity.Server:GetNW2Entity(id, default)
   end
   screen.GetServerInt = function(_,id, default)
     if not IsValid(screen.Entity.Server) then return default end
@@ -42,6 +47,7 @@ function ENT:RegisterScreenFunctions(screen)
     screen.SetMonitorInt = function(_, id, val) return screen.Entity:SetNW2Int(id, val) end
     screen.SetMonitorFloat = function(_, id, val) return screen.Entity:SetNW2Float(id, val) end
     screen.SetMonitorString = function(_, id, val) return screen.Entity:SetNW2String(id, val) end
+    screen.SetMonitorEntity = function(_, id, val) return screen.Entity:SetNW2Entity(id, val) end
   else
     screen.BindMonitorVar = function(_, ...) screen.Entity:BindNW2Hook(...) end
     screen.BindServerVar = function(_, ...)

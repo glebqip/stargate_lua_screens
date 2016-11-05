@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Galaxy map",
-  ID = 9,
+  ID = 5,
 }
 
 if SERVER then
@@ -121,11 +121,11 @@ else
           local xpos, ypos = 207+16+x*(359+16)+2, 192-8+y*(328-24)
           --local xpos, ypos = 207+x*359+2, 192+y*(328-32) FIXME TEST
           if i==0 and (xpos < minx or xpos > maxx or ypos < miny or ypos > maxy) then
-            local x = math.Clamp(x,-0.5,0.5)
-            local y = math.Clamp(y,-0.5,0.5)
+            local x = math.Clamp(x,-0.54,0.5)
+            local y = math.Clamp(y,-0.51,0.57)
             surface.SetDrawColor(Color(50,200,50))
             surface.SetTexture(Arrow)
-            surface.DrawTexturedRectRotated(207+x*359+2, 176+y*(328+32),32,32,180+math.deg(math.atan2(x,y)))
+            surface.DrawTexturedRectRotated(207+x*375+20, 192+y*(328-24)-8,32,32,180+math.deg(math.atan2((x-0.02)/1.04,(y-0.03)/1.08)))
             surface.SetTexture(Gate)
           end
           if xpos < minx or xpos > maxx then continue end

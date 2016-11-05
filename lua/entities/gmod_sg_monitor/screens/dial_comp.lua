@@ -158,9 +158,11 @@ else
         local size = math.min(1,state*1.4)*45
         local alpha = 1-math.max(0,state*1.4-1)*2.5
         surface.SetDrawColor(MainColor.r,MainColor.g,MainColor.b,alpha*255)
-        surface.DrawTexturedRect(10 + i*17,299 + 0,14,47)
-        surface.SetDrawColor(0,0,0,alpha*255)
-        surface.DrawRect(10 + i*17,299,14,45-size)
+        render.SetScissorRect( 10 + i*17,344,10 + i*17+14,344-size, true )
+          surface.DrawTexturedRect(10 + i*17,299 + 0,14,47)
+        render.SetScissorRect(0,0,0,0,false)
+        --surface.SetDrawColor(0,0,0,alpha*255)
+        --surface.DrawRect(10 + i*17,299,14,45-size)
       end
     end
     surface.SetAlphaMultiplier(1)

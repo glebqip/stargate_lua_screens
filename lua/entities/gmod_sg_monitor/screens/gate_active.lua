@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Gate active",
-  ID = 3,
+  ID = 7,
 }
 
 if SERVER then
@@ -55,13 +55,13 @@ if SERVER then
       self.SelfDestructDetect = nil
     end
     if server.SelfDestruct and self.SelfDestructState ~= 0 then
-      if self.Entity.Screen == 2 then
-        self.Entity.Screen = 3
+      if self.Entity.Screen == 3 then
+        self.Entity.Screen = 7
       end
       self.SelfDestructState = 0
     end
     if not server.SelfDestruct and self.SelfDestructResetState == 1 then
-      if self.Entity.Screen == 3 then
+      if self.Entity.Screen == 7 then
         self.ResetTimer = CurTime()
         self.SelfDestructResetState = 3
         self:EmitSound("glebqip/self_destruct_off.wav",65,100,1)
@@ -88,7 +88,7 @@ if SERVER then
     self:SetMonitorString("SDRName",self.SelfDestructResetName)
   end
   function SCR:Trigger(curr,key,value)
-    if self.Entity.Screen ~= 2 and self.Entity.Screen ~= 3 then
+    if self.Entity.Screen ~= 3 and self.Entity.Screen ~= 7 then
       self.SelfDestructState = 0
       self.SelfDestructCode = ""
       return
@@ -217,86 +217,94 @@ else
     local fanim1 = math.Clamp(anim*4,0,1)
     local fanim2 = math.Clamp((anim-0.25)*4,0,1)
 
-    local py = (CurTime()-self.Digits1Timer)%0.25*4-1
-    if #self.Digits1 > 0 then
-      for i=0,#self.Digits1-1 do
-        if self.Digits1[i+1] then
-          --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
-          draw.SimpleText(self.Digits1[i+1], "Marlett_10", 20,54+(i+py)*9+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        end
-      end
-    end
-    local py = (CurTime()-self.Digits2Timer)%0.25*4-1
-    if #self.Digits2 > 0 then
-      for i=0,#self.Digits2-1 do
-        if self.Digits2[i+1] then
-          --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
-          draw.SimpleText(self.Digits2[i+1], "Marlett_10", 465,54+(i+py)*9+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-        end
-      end
-    end
-    local py = (CurTime()-self.Digits3Timer)%0.1*10-2
-    for i=1,#self.Digits3 do
-      draw.SimpleText(self.Digits3[i], "Marlett_15", 330-i*7-py*7-2,333, SecondColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-    end
-    surface.SetDrawColor(Color(0,133,44))
-    if connected then surface.DrawRect(430,205,58,-44*(CurTime()%1)) end
-
-    --surface.SetDrawColor(Red)
-    if connected then
-      for i=0,(#self.Lines)*(CurTime()-self.LinesTimer) do
-        local x1 = 56/#self.Lines*i
-        local x2 = 56/#self.Lines*(i+1)
-        local y1 = self.Lines[i] or 0
-        local y2 = self.Lines[i+1] or 0
-        surface.DrawLine(23+x1,167+y1,23+x2,167+y2)
-      end
-    end
-
-    surface.SetDrawColor(MainColor)
-    surface.SetTexture(MainFrame)
-    surface.DrawTexturedRectRotated(256,192,512,512,0)
-    draw.SimpleText("SYSTEMS", "Marlett_12", 459,219, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
-    surface.SetDrawColor(Color(255,255,255))
-    surface.SetTexture(BWCircle)
-    for i=0,3 do
-      surface.DrawTexturedRectRotated(437+i*15,153,13,13,(CurTime()%2*360))
-    end
-
-    surface.SetDrawColor(Color(0,133,44))
-    surface.DrawLine(23,167,23+56*math.Clamp((CurTime()-self.LinesTimer)*4,0,1),167)
-    local code = self:GetMonitorString("SDRCode","")
-    if #code > 0 then
-      surface.SetDrawColor(Color(0,0,0))
-      surface.DrawRect(166,325,180,16)
       surface.SetDrawColor(MainColor)
-      surface.SetTexture(EnterCode)
-      surface.DrawTexturedRectRotated(256,321,256,64,0)
-      draw.SimpleText("ENTER CODE", "Marlett_29", 256,345, Color(100,35,15), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
-    elseif self:GetServerBool("SelfDestruct",false) then
-      draw.SimpleText("AUTODESTRUCT IN PROGRESS", "Marlett_21", 256,290, Color(215,75,35), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
-    elseif open then
-      draw.SimpleText("DEVICE ACTIVE", "Marlett_35", 256,290, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
-    elseif not connected then
-      draw.SimpleText("OFFLINE", "Marlett_35", 256,290, Red, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
-    end
-    for i=1,#code do
-      draw.SimpleText(code[i], "Marlett_35", 126+i*29,329, Color(200,200,182), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    end
-    if self:GetMonitorInt("SDRState",0) > 0 then
-      surface.SetDrawColor(Color(20,200,20,150))
-      surface.DrawRect(139,310,29.2*#code,36)
-      local name = self:GetMonitorString("SDRName","")
-      for i=1,#name do draw.SimpleText(name[i], "Marlett_12", 132+i*11,301, Color(200,200,182), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
-    end
+      surface.SetTexture(MainFrame)
+      surface.DrawTexturedRectRotated(256,192,512,512,0)
+      draw.SimpleText("SYSTEMS", "Marlett_12", 459,219, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
+      surface.SetDrawColor(Color(255,255,255))
+      surface.SetTexture(BWCircle)
+      for i=0,3 do
+        surface.DrawTexturedRectRotated(437+i*15,153,13,13,(CurTime()%2*360))
+      end
+      render.SetScissorRect(18,56,18+32,120,true)
+        local py = (CurTime()-self.Digits1Timer)%0.25*4-1
+        if #self.Digits1 > 0 then
+          for i=0,#self.Digits1-1 do
+            if self.Digits1[i+1] then
+              --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
+              draw.SimpleText(self.Digits1[i+1], "Marlett_10", 20,54+(i+py)*9+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
+          end
+        end
+      render.SetScissorRect(463,56,463+32,120,true)
+        local py = (CurTime()-self.Digits2Timer)%0.25*4-1
+        if #self.Digits2 > 0 then
+          for i=0,#self.Digits2-1 do
+            if self.Digits2[i+1] then
+              --SCR.drawText(92,97+(i+py)*9,Digits[i+1],0,1,SecondColor,font("Marlett",10))
+              draw.SimpleText(self.Digits2[i+1], "Marlett_10", 465,54+(i+py)*9+2, SecondColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
+          end
+        end
+      render.SetScissorRect(185,327,327,341,true)
+        local py = (CurTime()-self.Digits3Timer)%0.1*10-2
+        for i=1,#self.Digits3 do
+          draw.SimpleText(self.Digits3[i], "Marlett_15", 330-i*7-py*7-2,333, SecondColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        end
+      render.SetScissorRect(23,153,23+56*(CurTime()-self.LinesTimer),308,true)
+      surface.SetDrawColor(Color(0,133,44))
+        --surface.SetDrawColor(Red)
+        if connected then
+          for i=0,#self.Lines do
+            local x1 = 56/#self.Lines*i
+            local x2 = 56/#self.Lines*(i+1)
+            local y1 = self.Lines[i] or 0
+            local y2 = self.Lines[i+1] or 0
+            surface.DrawLine(23+x1,167+y1,23+x2,167+y2)
+          end
+        end
+      render.SetScissorRect(0,0,0,0,false)
+      if connected then
+        for i=0,3 do
+          surface.DrawRect(430+i*15,205,13,-44*(CurTime()%1))
+        end
+      end
 
-    surface.SetDrawColor(Color(54,66,11))
-    local banim = 8-math.floor(CurTime()%2*10)
-    if 0 <= banim and banim <= 8 then
-      surface.DrawRect(95,61+banim*26.2,16,8)
-      surface.DrawRect(401,61+banim*26.2,16,8)
-    end
 
+      surface.SetDrawColor(Color(0,133,44))
+      surface.DrawLine(23,167,23+56*math.Clamp((CurTime()-self.LinesTimer)*4,0,1),167)
+      local code = self:GetMonitorString("SDRCode","")
+      if #code > 0 then
+        surface.SetDrawColor(Color(0,0,0))
+        surface.DrawRect(166,325,180,16)
+        surface.SetDrawColor(MainColor)
+        surface.SetTexture(EnterCode)
+        surface.DrawTexturedRectRotated(256,321,256,64,0)
+        draw.SimpleText("ENTER CODE", "Marlett_29", 256,345, Color(100,35,15), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      elseif self:GetServerBool("SelfDestruct",false) then
+        draw.SimpleText("AUTODESTRUCT IN PROGRESS", "Marlett_21", 256,290, Color(215,75,35), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      elseif open then
+        draw.SimpleText("DEVICE ACTIVE", "Marlett_35", 256,290, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      elseif not connected then
+        draw.SimpleText("OFFLINE", "Marlett_35", 256,290, Red, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+      end
+      for i=1,#code do
+        draw.SimpleText(code[i], "Marlett_35", 126+i*29,329, Color(200,200,182), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+      end
+      if self:GetMonitorInt("SDRState",0) > 0 then
+        surface.SetDrawColor(Color(20,200,20,150))
+        surface.DrawRect(139,310,29.2*#code,36)
+        local name = self:GetMonitorString("SDRName","")
+        for i=1,#name do draw.SimpleText(name[i], "Marlett_12", 132+i*11,301, Color(200,200,182), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER) end
+      end
+
+      surface.SetDrawColor(Color(54,66,11))
+      local banim = 8-math.floor(CurTime()%2*10)
+      if 0 <= banim and banim <= 8 then
+        surface.DrawRect(95,61+banim*26.2,16,8)
+        surface.DrawRect(401,61+banim*26.2,16,8)
+      end
+    render.SetScissorRect(0,0,0,0,false)
     local banim = 1-math.Clamp((anim-1)*2,0,1)----CurTime()%1.3/1.3
     surface.SetDrawColor(Color(0,0,0))
     surface.DrawRect(0,0,512,384*banim)

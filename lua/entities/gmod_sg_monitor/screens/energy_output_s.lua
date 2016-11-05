@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Energy output (series)",
-  ID = 7,
+  ID = 9,
 }
 
 if SERVER then
@@ -42,6 +42,9 @@ else
   local Red = Color(239,0,0)
 
   function SCR:Draw(MainColor, SecondColor, ChevBoxesColor)
+    surface.SetDrawColor(MainColor)
+    surface.SetTexture(MainFrame)
+    surface.DrawTexturedRectRotated(256,192,512,512,0)
     local anim = (CurTime()-self.LinesTimer)%3
     local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
     if anim <= 1 then st,en = 0,0 end
@@ -49,43 +52,37 @@ else
     if anim > 2 then st = math.min(1,anim-2) end
 
     surface.SetDrawColor(Color(141,150,110))
-    for i=1+math.ceil((#self.Lines2-1)*st),math.ceil((#self.Lines2-1)*en) do
-      local x1 = math.floor(89/#self.Lines2*i)
-      local x2 = math.floor(89/#self.Lines2*(i+1))
-      local y1 = self.Lines2[i] or 0
-      local y2 = math.floor(self.Lines2[i+1])
-      surface.DrawLine(15+x1,224+y1,15+x2,224+y2)
-    end
-    surface.SetDrawColor(Color(133,60,38))
-    for i=1+math.ceil((#self.Lines3-1)*st),math.ceil((#self.Lines3-1)*en) do
-      local x1 = math.floor(89/#self.Lines3*i)
-      local x2 = math.floor(89/#self.Lines3*(i+1));
-      local y1 = self.Lines3[i] or 0
-      local y2 = math.floor(self.Lines3[i+1])
-      surface.DrawLine(15+x1,224+y1,15+x2,224+y2)
-    end
+    --math.ceil((#self.Lines2-1)*st),math.ceil((#self.Lines2-1)*en)
+    render.SetScissorRect(19+89*st,194,19+89*en,227,true)
+      for i=1,#self.Lines2-1 do
+        local x1 = math.floor(89/#self.Lines2*i)
+        local x2 = math.floor(89/#self.Lines2*(i+1))
+        local y1 = self.Lines2[i] or 0
+        local y2 = math.floor(self.Lines2[i+1])
+        surface.DrawLine(15+x1,224+y1,15+x2,224+y2)
+      end
+      surface.SetDrawColor(Color(133,60,38))
+      for i=1,#self.Lines3-1 do
+        local x1 = math.floor(89/#self.Lines3*i)
+        local x2 = math.floor(89/#self.Lines3*(i+1));
+        local y1 = self.Lines3[i] or 0
+        local y2 = math.floor(self.Lines3[i+1])
+        surface.DrawLine(15+x1,224+y1,15+x2,224+y2)
+      end
+    render.SetScissorRect(0,0,0,0,false)
 
     local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
     if anim > 2 then st = anim-2 end
     if anim < 1 then en = anim end
-    surface.SetTexture(GradientL)
-    surface.SetDrawColor(Color(75,42,47))
-    surface.DrawTexturedRect(134,345,371,29)
-    surface.SetTexture(GradientR)
-    surface.SetDrawColor(Color(14,26,52))
-    surface.DrawTexturedRect(134,345,371,29)
+    render.SetScissorRect(136+367*st,347,136+367*en,371,true)
+      surface.SetTexture(GradientL)
+      surface.SetDrawColor(Color(75,42,47))
+      surface.DrawTexturedRect(134,345,371,29)
+      surface.SetTexture(GradientR)
+      surface.SetDrawColor(Color(14,26,52))
+      surface.DrawTexturedRect(134,345,371,29)
+    render.SetScissorRect(0,0,0,0,false)
 
-    surface.SetDrawColor(Color(0,0,0))
-    if st > 0 then
-      surface.DrawRect(134,345,371*st,29)
-    else
-      surface.DrawRect(134+371*en,345,371-371*en,29)
-    end
-
-
-    surface.SetDrawColor(MainColor)
-    surface.SetTexture(MainFrame)
-    surface.DrawTexturedRectRotated(256,192,512,512,0)
     surface.SetTexture(Circle)
     surface.SetDrawColor(Color(255,255,255))
     surface.DrawTexturedRectRotated(25,237,16,16,90)
@@ -121,6 +118,8 @@ else
     draw.SimpleText("locked in", "Marlett_15", 13, 320, Color(141,150,110), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     draw.SimpleText("magnatomic flux", "Marlett_15", 13, 335, Color(141,150,110), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     surface.SetDrawColor(Color(255,255,255))
+
+    render.SetScissorRect(183+313*st,76,183+313*en,327,true)
 		render.ClearStencil()
 		render.SetStencilEnable(true)
 		render.SetStencilTestMask(255);render.SetStencilWriteMask(255);render.SetStencilReferenceValue(10)
@@ -128,8 +127,8 @@ else
 		render.SetStencilFailOperation(STENCIL_KEEP)
 		render.SetStencilZFailOperation(STENCIL_KEEP)
 		render.SetStencilCompareFunction(STENCIL_ALWAYS)
-      draw.DrawTLine(183+Lerp(st*17,0,20),202,183+Lerp(en*17,0,20),202,2)
-      draw.DrawTLine(475+Lerp((st-(1-1/17))*17,0,20),202,475+Lerp((en-(1-1/17))*17,0,21),202,2)
+      draw.DrawTLine(183,202,208,202,2)
+      draw.DrawTLine(471,202,496,202,2)
       --surface.DrawLine(126+310+29*st,193,126+347,193)
       local st, en = 0,1--math.Clamp(anim < 3 and anim*2 or 4-anim,0,1)
       if anim < 1 then en = math.min(anim+anim*40/305-20/305,1) end
@@ -137,7 +136,7 @@ else
         anim = anim-2
         st = math.max(anim+anim*40/305-20/305,0)
       end
-      local ie = math.ceil(55*en)
+      local ie = math.ceil(55*(en+0.08))
       if ie ~= self.EndLine and ie > 1 and ie < 55 then
         if self:GetServerBool("Connected",false) and self.Active then
           local double = not self:GetServerBool("Local",false)
@@ -153,14 +152,15 @@ else
         end
         self.EndLine = ie
       end
-      for i=math.ceil(55*st),(55)*en do
-        local x1 = math.floor(269/55*i)
-        local x2 = math.floor(269/55*(i+1));
-        local y1 = self.Lines[i] or 0
-        local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
-        --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
-        draw.DrawTLine(203+x1,202+y1,203+x2,202+y2,2)
-      end
+        for i=1,55 do
+          local x1 = math.floor(269/55*i)
+          local x2 = math.floor(269/55*(i+1));
+          local y1 = self.Lines[i] or 0
+          local y2 = math.floor(self.Lines[i+1] or 0) ;oldy = y2
+          --draw.DrawTLine(240+x1,263+y1,238+x2,263+y2,2)
+          draw.DrawTLine(203+x1,202+y1,203+x2,202+y2,2)
+        end
+      render.SetScissorRect(0,0,0,0,false)
     render.SetStencilCompareFunction(STENCIL_EQUAL)
       surface.SetDrawColor(Color(150,150,150))
       surface.SetTexture(Gradient)

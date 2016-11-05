@@ -8,6 +8,7 @@ include("shared.lua")
 if (StarGate==nil or StarGate.CheckModule==nil or not StarGate.CheckModule("extra")) then return end
 
 function ENT:Initialize()
+	self.LockedGate = false
 	self:SetModel("models/props_lab/harddrive02.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
@@ -160,30 +161,19 @@ function ENT:Think()
 	self:SetNW2Bool("On",self.On)
 
 	--Start emulation
-	if self.On and self.State > -1 then
+	if self.On and self.State ~= -1 then
 		local time = CurTime() - self.StartTimer
-		if self.State > 0 and math.random() > 0.95 then
-			self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55,100,0.3)
-		end
-		if time > 3 and self.State == 0 then
+		if self.State > 0 and math.random() > 0.95 then self:EmitSound("glebqip/hdd_"..math.random(1,6)..".wav",55,100,0.3) end
+		if time > 2 and self.State == 0 then self.State = -2 end
+		if time > 3 and self.State == -2 then
 			self:EmitSound("glebqip/computer_beep.wav",55)
 			self.State = 1
 		end
-		if time > 4 and self.State == 1 then
-			self.State = 2
-		end
-		if time > 7 and self.State == 2 then
-			self.State = 3
-		end
-		if time > 7.3 and self.State == 3 then
-			self.State = 4
-		end
-		if time > 11 and self.State == 4 then
-			self.State = 5
-		end
-		if time > 15 and self.State == 5 then
-			self.State = 6
-		end
+		if time > 4 and self.State == 1 then self.State = 2 end
+		if time > 7 and self.State == 2 then self.State = 3 end
+		if time > 7.3 and self.State == 3 then self.State = 4 end
+		if time > 11 and self.State == 4 then self.State = 5 end
+		if time > 15 and self.State == 5 then self.State = 6 end
 		if time > 17 and self.State == 6 then
 			self.State = -1
 			self.Iris = false
@@ -197,7 +187,8 @@ function ENT:Think()
 			self.Gates = self:FindFineGates()
 			self.AddressCheck = CurTime()
 			self:SetNW2Int("AddressCount",#self.Gates)
-			local xmin,xmax,ymin,ymax
+			local pos = self:GetPos()
+			local xmin,xmax,ymin,ymax = pos.x,pos.x,pos.y,pos.y
 			for _,gate in ipairs(self.Gates) do --First iteration for find bounding box of all gates
 				local pos = gate:GetPos()
 				if not xmin or xmin > pos.x then xmin = pos.x end
@@ -205,7 +196,6 @@ function ENT:Think()
 				if not ymin or ymin > pos.y then ymin = pos.y end
 				if not ymax or ymax < pos.y then ymax = pos.y end
 			end
-			local pos = self:GetPos()
 			local addr = self:GetFineAddress(gate)
 			if #addr < 9 and not addr:find("#") then addr = addr.."#" end
 			self:SetNW2String("AddressName0",gate.GateName ~= "" and gate.GateName or "N/A")
@@ -256,7 +246,6 @@ function ENT:Think()
 		end
 		if enter == 2 and not self.SelfDestruct then
 			if IsValid(self.Bomb) then
-				self.Bomb.chargeTime = 120+3
 				self.Bomb:StartDetonation(self.Bomb.detonationCode)
 			end
 			self.SelfDestruct = true
@@ -298,6 +287,7 @@ function ENT:Think()
 		self:SetNW2Bool("Inbound", inbound)
 		--print(gate:GetNW2Bool("ActChevronsL"))
 		self:SetNW2Bool("RingRotation", ringrot)
+		self:SetNW2Bool("RingDir", gate:GetWire("Ring Rotation", 0, true) == 1)
 		self:SetNW2Bool("ChevronLocked", locked)
 		self:SetNW2Int("Chevron", chevron)
 		self:SetNW2String("Chevrons", gate:GetWire("Chevrons", "", true))
@@ -530,6 +520,7 @@ function ENT:Touch(ent)
 	if not IsValid(self.LockedGate) and (ent.IsGroupStargate) then
 		self.LockedGate = ent
 		self.LockedGate:TriggerInput("SGC Type",1)
+		self:SetNW2Entity("Gate",ent)
 		local ed = EffectData()
 		ed:SetEntity(self)
 		util.Effect("propspawn", ed, true, true)

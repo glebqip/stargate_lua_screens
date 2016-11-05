@@ -6,7 +6,7 @@
 
 local SCR = {
   Name = "Energy flux",
-  ID = 4,
+  ID = 10,
 }
 
 if SERVER then
@@ -51,19 +51,20 @@ else
       local size = state*39
 
       local x = i%3*14 + id%5*60 + (id%5 == 4 and 13 or 0)
-      local y = (math.ceil((id-4)/5))*53 + (39-size) + (id >= 15 and 25 or 0)
-      surface.DrawTexturedRect(182 + x,18 + y,11,size)
+      local y = (math.ceil((id-4)/5))*53 + (id >= 15 and 25 or 0)--(39-size) +
+      render.SetScissorRect( 182 + x,18+39 + y,182 + x+11,18+39 + y-size, true )
+        surface.DrawTexturedRect(182 + x,18 + y,11,39)
+      render.SetScissorRect(0,0,0,0,false)
     end
 
-    local py = (CurTime()-self.DigitsTimer)%0.2*5-1
-    for i=1,27 do
-      if self.Digits[i] then
-        draw.SimpleText(self.Digits[i], "Marlett_12", 150, 20+(i-1)*13+py*13, MainColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+    render.SetScissorRect(54,14,178,351,true)
+      local py = (CurTime()-self.DigitsTimer)%0.2*5-1
+      for i=1,27 do
+        if self.Digits[i] then
+          draw.SimpleText(self.Digits[i], "Marlett_12", 150,  20+(i-1)*13+py*13, MainColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+        end
       end
-    end
-    surface.SetDrawColor(Color(0,0,0))
-    surface.DrawRect(52,2,100,11)
-    surface.DrawRect(52,352,100,11)
+    render.SetScissorRect(0,0,0,0,false)
   end
 
   function SCR:Think(curr)

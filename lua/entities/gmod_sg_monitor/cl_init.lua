@@ -1,6 +1,5 @@
 include("shared.lua")
 include("cl_gpudraw_lite.lua")
-include("rt_mgr.lua")
 
 surface.CreateFont("SGC_SG1", {font="Stargate Address Glyphs Concept", size=35, weight=400, antialias=true, additive=false})
 surface.CreateFont("SGC_ABS", {font="Stargate Address Glyphs Concept", size=19, weight=400, antialias=true, additive=false})
@@ -29,22 +28,25 @@ surface.CreateFont("Marlett_Err", {font="Marlett", size=19, weight=800, antialia
 surface.CreateFont("Marlett_Error", {font="Marlett", size=56, weight=800, antialias=true, additive=false, })
 surface.CreateFont("NOSignal", {font="Arial Black", size=30, weight=800, antialias=false, additive=false, })
 
-local Select = surface.GetTextureID("glebqip/Select")
+local Select = surface.GetTextureID("glebqip/select")
+local EnergyStar = surface.GetTextureID("glebqip/energystar")
+local SGC = surface.GetTextureID("glebqip/sgc")
 
-local SelfDestructCode = surface.GetTextureID("glebqip/active screen 1/sd_code")
-local SelfDestructStandby = surface.GetTextureID("glebqip/active screen 1/sd_standby")
+local SelfDestructCode = surface.GetTextureID("glebqip/active_screen_1/sd_code")
+local SelfDestructStandby = surface.GetTextureID("glebqip/active_screen_1/sd_standby")
 
+local RT_SGC_Mon = GetRTManager("SGC_Mon", 512, 512, 100)
 if (SGLanguage ~=nil and SGLanguage.GetMessage ~=nil) then
   ENT.Category = SGLanguage.GetMessage("entity_main_cat")
   ENT.PrintName = SGLanguage.GetMessage("sgc_computer")
 end
 
-RT_SGC_Mon = GetRTManager("SGC_Mon", 512, 384, 100)
 function ENT:Initialize()
   self.RT = RT_SGC_Mon:GetRT()
   self:LoadScreens()
 
   self:ScreenInit(512, 384, Vector(11.75, -512/2*0.04, 384/2*0.04+3.9), Angle(0, 90, 85.5), 0.04)
+  --[[
   --Colors:Movie
   self.MainColor = Color(30, 120, 240)
   self.ChevBoxesColor = self.MainColor
@@ -53,6 +55,7 @@ function ENT:Initialize()
   self.MainColor = Color(40, 167, 240)
   self.ChevBoxesColor = self.MainColor
   self.SecondColor = Color(200, 200, 200)
+  ]]
   --Colors:
   self.MainColor = Color(30, 180, 200)
   self.ChevBoxesColor = self.MainColor
@@ -63,18 +66,11 @@ function ENT:Initialize()
   self.NoSignalYDir = 1
   self.NoSignalX = 0
   self.NoSignalY = 0
-  self.Server = self:GetNW2Entity("Server")
   self.IDCSound = CreateSound(self,"glebqip/idc_loop.wav")
   self.IDCSound:SetSoundLevel(55)
   self.ScrollSND = CreateSound(self,"glebqip/scroll.wav")
   self.ScrollSND:SetSoundLevel(55)
   self.Scrolling = false
-  self:SetNWVarProxy("Server",function(srv,name,oldval,newval)
-    self.Server = newval
-    for k,v in pairs(self.Screens) do
-      if v.Bind then v:Bind() end
-    end
-  end)
 end
 
 function ENT:SolveHook(name,old,new)
@@ -97,6 +93,7 @@ end
 function ENT:Draw()
   self:DrawModel()
   self:DrawScreen(0, -10, 512, 410, 0.96)
+  self.CanRender = true
   return true
 end
 
@@ -112,27 +109,7 @@ end
 
 function ENT:Screen()
   if not self:GetNW2Bool("On",false) then return end
-  if false and not self:GetNW2Bool("ServerConnected",false) then
-    for i=0,7 do
-      local r = i%4 < 2 and 255 or 0
-      local g = i%8 < 4 and 255 or 0
-      local b = i%2 == 0 and 255 or 0
-      surface.SetDrawColor(r,g,b)
-      surface.DrawRect(512/8*i,1,64,384-130-1)
-      surface.SetDrawColor(r/2,g/2,b/2)
-      for i1=1,4 do
-        surface.SetDrawColor(r/5*i1,g/5*i1,b/5*i1)
-        surface.DrawRect(512/8*i,334-20*i1,64,20)
-      end
-      surface.SetDrawColor(255-i*36.4,255-i*36.4,255-i*36.4)
-      surface.DrawRect(512/8*i,334,64,49)
-
-      surface.SetDrawColor(0,0,0,130)
-      surface.DrawRect(256-75,192-13,150,26)
-      draw.SimpleText("NO SIGNAL", "NOSignal", 256,192, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    end
-
-  elseif not self:GetNW2Bool("ServerConnected",false) or not IsValid(self.Server) then
+  if not self:GetNW2Bool("ServerConnected",false) or not IsValid(self.Server) then
     self.NoSignalX = self.NoSignalX + 30*FrameTime()*self.NoSignalXDir
     if self.NoSignalX+210 > 512 then self.NoSignalXDir = -1 elseif self.NoSignalX < 0 then self.NoSignalXDir = 1 end
     self.NoSignalY = self.NoSignalY + 30*FrameTime()*self.NoSignalYDir
@@ -152,7 +129,7 @@ function ENT:Screen()
     self.Screens[self:GetNW2Int("CurrScreen",0)]:Draw(self.MainColor,self.SecondColor,self.ChevBoxesColor)
     surface.SetAlphaMultiplier(1)
     local code = self:GetNW2String("SDCode","")
-    if self:GetNW2Int("CurrScreen",0) ~= 3 and self.Server:GetNW2Bool("SelfDestruct",false) and CurTime()%1 > 0.5 then
+    if self:GetNW2Int("CurrScreen",0) ~= 7 and self.Server:GetNW2Bool("SelfDestruct",false) and CurTime()%1 > 0.5 then
       surface.SetDrawColor(255,255,255)
       surface.DrawRect(46,106,420,172)
       surface.SetDrawColor(200,40,40)
@@ -246,13 +223,36 @@ function ENT:Screen()
     end
   elseif self.Server:GetNW2Bool("On",false) then
     local LoadState = self.Server:GetNW2Int("LoadState",-1)
-    if LoadState > 1 then
-      draw.SimpleText("Stargate command BIOS", "Marlett_21", 40,0, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-      draw.SimpleText("Copyright (C) 1990-99", "Marlett_21", 40,20, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    if LoadState == -2 then
+      for i=0,7 do
+        local r = i%4 < 2 and 255 or 0
+        local g = i%8 < 4 and 255 or 0
+        local b = i%2 == 0 and 255 or 0
+        surface.SetDrawColor(r,g,b)
+        surface.DrawRect(512/8*i,1,64,384-130-1)
+        surface.SetDrawColor(r/2,g/2,b/2)
+        for i1=1,4 do
+          surface.SetDrawColor(r/5*i1,g/5*i1,b/5*i1)
+          surface.DrawRect(512/8*i,334-20*i1,64,20)
+        end
+        surface.SetDrawColor(255-i*36.4,255-i*36.4,255-i*36.4)
+        surface.DrawRect(512/8*i,334,64,49)
 
-      if LoadState > 2 then
-        draw.SimpleText("Processor: Intel Pentium MMX 233 MHz", "Marlett_21", 10,20*3, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        --surface.SetDrawColor(0,0,0,130)
+        --surface.DrawRect(256-75,192-13,150,26)
+        --draw.SimpleText("NO SIGNAL", "NOSignal", 256,192, Color(255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
       end
+    end
+    if LoadState > 1 then
+      surface.SetDrawColor(255,255,255)
+      surface.SetTexture(EnergyStar)
+      surface.DrawTexturedRectRotated(512-75,45,256,128,0)
+      surface.SetTexture(SGC)
+      surface.DrawTexturedRectRotated(34,25,64,64,0)
+      draw.SimpleText("Stargate command BIOS", "Marlett_21", 60,5, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+      draw.SimpleText("Copyright (C) 1990-99", "Marlett_21", 60,25, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+
+      if LoadState > 2 then draw.SimpleText("Processor: Intel Pentium MMX 233 MHz", "Marlett_21", 10,20*3, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP) end
       if LoadState > 3 then
         local time = math.min(25000,(CurTime()-self.StartTime)*25000/3)
         draw.SimpleText(string.format("Memory test: %d %s",time,time == 25000 and "OK" or ""), "Marlett_21", 10,20*4, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
@@ -261,9 +261,7 @@ function ENT:Screen()
         local time = math.min(0x25A80000,(CurTime()-self.StartTime2)*0x25A80000/2)
         draw.SimpleText(string.format("Сhecking resources: 0x%X %s",time,time == 0x25A80000 and "OK" or ""), "Marlett_21", 10,20*5, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
       end
-      if LoadState > 5 then
-        draw.SimpleText("Booting"..string.rep(".",CurTime()%0.5*6+0.5), "Marlett_21", 10,20*7, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-      end
+      if LoadState > 5 then draw.SimpleText("Booting"..string.rep(".",CurTime()%0.5*6+0.5), "Marlett_21", 10,20*7, Color(200,200,200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP) end
     end
   end
 
@@ -271,7 +269,8 @@ function ENT:Screen()
 end
 
 function ENT:Think()
-  if self.CurrScreen == 8 and self.Screens[8].Scrooling or self.CurrScreen == 9 and self.Screens[9].Scrooling then
+  self.Server = self:GetNW2Entity("Server")
+  if self.CurrScreen == 2 and self.Screens[2].Scrooling or self.CurrScreen == 5 and self.Screens[5].Scrooling then
     self.ScrollSND:Play()
   else
     self.ScrollSND:Stop()
@@ -288,62 +287,85 @@ function ENT:Think()
     self.RequestScreenReload = false
     self:LoadScreens()
   end
-  if not IsValid(self.Server) then
-    return
-  end
-  if self.CurrScreen ~= self:GetNW2Int("CurrScreen",0) then
-    self.CurrScreen = self:GetNW2Int("CurrScreen",0)
-    if self.Screens[self.CurrScreen] then
-      self.Screens[self.CurrScreen]:Initialize(true)
-    end
-  end
-  if self:GetNW2Int("CurrScreen",0) > 0 then
-    for k,v in pairs(self.Screens) do
-      v:Think(self.CurrScreen == k)
-    end
-  end
-  local LoadState = self.Server:GetNW2Int("LoadState",-1)
-  if LoadState > 0 then
-    if LoadState > 3 then
-      if not self.StartTime then
-        self.StartTime = CurTime()
+
+  if IsValid(self.Server) then
+    if self.ColorType ~= self.Server:GetNW2Bool("IsMovie") and 0 or self.Server:GetNW2Bool("Local") and 1 or 2 then
+      self.ColorType = self.Server:GetNW2Bool("IsMovie") and 0 or self.Server:GetNW2Bool("Local") and 1 or 2
+      if self.ColorType == 0 then
+        --Colors:Movie
+        self.MainColor = Color(30, 120, 240)
+        self.ChevBoxesColor = self.MainColor
+        self.SecondColor = Color(229, 238, 179)
+      elseif self.ColorType == 1 then
+        --Colors:First series
+        self.MainColor = Color(40, 167, 240)
+        self.ChevBoxesColor = self.MainColor
+        self.SecondColor = Color(200, 200, 200)
+      else
+        --Colors:Fifth race
+        self.MainColor = Color(30, 180, 200)
+        self.ChevBoxesColor = self.MainColor
+        self.SecondColor = Color(200, 200, 182)
       end
-    else
-      self.StartTime = nil
-      self.StartTime2 = nil
     end
-    if LoadState > 4 and not self.StartTime2 then
-      self.StartTime2 = CurTime()
+
+    if self.CurrScreen ~= self:GetNW2Int("CurrScreen",0) then
+      self.CurrScreen = self:GetNW2Int("CurrScreen",0)
+      if self.Screens[self.CurrScreen] then
+        self.Screens[self.CurrScreen]:Initialize(true)
+      end
+    end
+    if self:GetNW2Int("CurrScreen",0) > 0 then
+      for k,v in pairs(self.Screens) do
+        v:Think(self.CurrScreen == k)
+      end
+    end
+    local LoadState = self.Server:GetNW2Int("LoadState",-1)
+    if LoadState > 0 then
+      if LoadState > 3 then
+        if not self.StartTime then
+          self.StartTime = CurTime()
+        end
+      else
+        self.StartTime = nil
+        self.StartTime2 = nil
+      end
+      if LoadState > 4 and not self.StartTime2 then
+        self.StartTime2 = CurTime()
+      end
+    end
+    local SDState = self:GetNW2Int("SDState",0)
+    if SDState == 1 and not self.SDOpTimer then
+      self.SDOpTimer = CurTime()--(1-math.Clamp((CurTime()-(self.SDClTimer or CurTime()))*6,0,1))
+      self.SDClTimer = nil
+    end
+    if (SDState == -1 or SDState == 0 or SDState == 3) and not self.SDClTimer and self.SDOpTimer then
+      self.SDClTimer = CurTime()--(1-math.Clamp((CurTime()-(self.SDOpTimer or CurTime()))*6,0,1))
+      self.SDOpTimer = nil
+    end
+    if self.SDClTimer and CurTime()-self.SDClTimer > 0.2 then
+      self.SDClTimer = nil
+    end
+    if SDState == 2 and not self.SDEnTimer then
+      self.SDEnTimer = CurTime()
+    elseif SDState ~= 2 and self.SDEnTimer then
+      self.SDEnTimer = nil
+    end
+    if SDState == -1 and not self.SDStTimer and not self.SDOpTimer and not self.SDEnTimer then
+      self.SDStTimer = CurTime()
+    elseif SDState ~= -1 and self.SDStTimer then
+      self.SDStTimer = nil
+    end
+    local timer = self.Server:GetNW2Int("SDTimer",0)
+    if self.Server:GetNW2Bool("SelfDestruct",false) and timer ~= self.DestructTime then
+      if self.DSound then self:EmitSound("glebqip/self_destruct_beep3.wav",65,100,0.2) end
+      self.DSound = timer%1 < 0.5
+      self.DestructTime = timer
     end
   end
-  local SDState = self:GetNW2Int("SDState",0)
-  if SDState == 1 and not self.SDOpTimer then
-    self.SDOpTimer = CurTime()--(1-math.Clamp((CurTime()-(self.SDClTimer or CurTime()))*6,0,1))
-    self.SDClTimer = nil
-  end
-  if (SDState == -1 or SDState == 0 or SDState == 3) and not self.SDClTimer and self.SDOpTimer then
-    self.SDClTimer = CurTime()--(1-math.Clamp((CurTime()-(self.SDOpTimer or CurTime()))*6,0,1))
-    self.SDOpTimer = nil
-  end
-  if self.SDClTimer and CurTime()-self.SDClTimer > 0.2 then
-    self.SDClTimer = nil
-  end
-  if SDState == 2 and not self.SDEnTimer then
-    self.SDEnTimer = CurTime()
-  elseif SDState ~= 2 and self.SDEnTimer then
-    self.SDEnTimer = nil
-  end
-  if SDState == -1 and not self.SDStTimer and not self.SDOpTimer and not self.SDEnTimer then
-    self.SDStTimer = CurTime()
-  elseif SDState ~= -1 and self.SDStTimer then
-    self.SDStTimer = nil
-  end
-  local timer = self.Server:GetNW2Int("SDTimer",0)
-  if self.Server:GetNW2Bool("SelfDestruct",false) and timer ~= self.DestructTime then
-    if self.DSound then self:EmitSound("glebqip/self_destruct_beep3.wav",65,100,0.2) end
-    self.DSound = timer%1 < 0.5
-    self.DestructTime = timer
-  end
+
+  if self.CanRender then self:DrawRT(0, -10, 512, 410, 0.96) end
+  self.CanRender = false
 end
 
 function ENT:OnRemove()

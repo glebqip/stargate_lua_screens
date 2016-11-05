@@ -3,7 +3,6 @@ resource.AddWorkshop("761096308")
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 AddCSLuaFile("cl_gpudraw_lite.lua")
-AddCSLuaFile("rt_mgr.lua")
 for _,filename in pairs(file.Find("entities/gmod_sg_monitor/screens/*.lua","LUA")) do AddCSLuaFile("entities/gmod_sg_monitor/screens/"..filename) end
 ENT.ClientVer = 1
 
@@ -111,7 +110,7 @@ function ENT:Trigger(key, value)
     if self.MenuChoosed > 0 then
       self.MenuChoosed = 0
     else
-      self.MenuChoosed = 1
+      self.MenuChoosed = self.Screen
       self.MenuScroll = 0
     end
   end
