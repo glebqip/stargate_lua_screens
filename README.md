@@ -1,9 +1,9 @@
 stargate_lua_screens
 ========================
 
-This is the lua version Stargate dialing computer pack from first 2 seasons
+This is stargate dialing computer pack from first 2 seasons written on GLua
 ![](http://i.imgur.com/uFgKZMW.png)
-**WARNING! All of this is in development! There can be errors!**
+**WARNING! All of this is in development! Addon can have bugs and errors!**
 
 This screens is present in this addon:
 * Dialing screen
