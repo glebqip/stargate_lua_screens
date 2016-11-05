@@ -1,4 +1,4 @@
-stargate_lua_screens
+Stargate GLua screens pack
 ========================
 
 This is stargate dialing computer pack from first 2 seasons written on GLua
